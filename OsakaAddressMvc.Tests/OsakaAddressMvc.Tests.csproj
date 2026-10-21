@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- テスト対象の Web プロジェクトを参照する -->
+  <ItemGroup>
+    <ProjectReference Include="..\OsakaAddressMvc\OsakaAddressMvc.csproj" />
+  </ItemGroup>
+
+  <!-- IOptions・ILogger など ASP.NET Core 共有フレームワークの型を使うため -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Web プロジェクトの住所データ（Municipalities.json と Wards/ の24ファイル）をテストの出力先へコピーする。
+       原本は Web 側の1か所のみ。v0.5.5 で Data/ 配下すべてを対象にした -->
+  <ItemGroup>
+    <None Include="..\OsakaAddressMvc\Data\**\*.json"
+          Link="Data\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

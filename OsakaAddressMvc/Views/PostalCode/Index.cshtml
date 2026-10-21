@@ -1,0 +1,126 @@
+@model OsakaAddressMvc.Models.PostalCodeViewModel
+@{
+    ViewData["Title"] = "郵便番号検索";
+}
+<div class="container py-2 postal-page" style="max-width:900px">
+    <p class="text-body-secondary mb-2">Osaka Address MVC · @($"v{AppInfo.Version}")</p>
+    <h1 class="h2 mb-3">ポストくんで郵便番号を検索</h1>
+    <p class="text-body-secondary">住所検索とは独立した画面です。ポストくんの公開 API を使用し、大阪府内の地域（区・市町村）と町名から郵便番号の候補を検索します。</p>
+
+    <div class="alert alert-info" role="note">
+        郵便番号の検索対象は <strong>地域・町名（町域レベル）</strong> です。丁目・番・号の実在性は照合されません。
+        APIキーやアカウント登録は不要です。候補が複数ある場合は自動決定せず一覧表示します。
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body p-3 p-md-4">
+            <form asp-controller="PostalCode" asp-action="Index" method="get">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-8">
+                        <label for="area" class="form-label fw-semibold">1. 地域を選択</label>
+                        <select class="form-select" name="area" id="area" required>
+                            <option value="">地域を選択してください</option>
+                            @foreach (var group in Model.Areas.GroupBy(a => a.Group))
+                            {
+                                <optgroup label="@group.Key">
+                                    @foreach (var area in group)
+                                    {
+                                        if (area.Key == Model.SelectedArea?.Key)
+                                        {
+                                            <option value="@area.Key" selected>@area.Key</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@area.Key">@area.Key</option>
+                                        }
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <button type="submit" class="btn btn-outline-primary w-100">町名の指定へ進む</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="my-4" />
+
+            @if (Model.SelectedArea is not null)
+            {
+                <form asp-controller="PostalCode" asp-action="Search" method="post" asp-antiforgery="true">
+                    <input type="hidden" name="area" value="@Model.SelectedArea.Key" />
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-8">
+                            @if (Model.SelectedArea.HasTownData)
+                            {
+                                <label for="town" class="form-label fw-semibold">2. @Model.SelectedArea.Key の町名を選択</label>
+                                <select class="form-select" name="town" id="town" required>
+                                    <option value="">町名を選択してください</option>
+                                    @foreach (var town in Model.Towns)
+                                    {
+                                        if (town == Model.SelectedTown)
+                                        {
+                                            <option value="@town" selected>@town</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@town">@town</option>
+                                        }
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <label for="town-text" class="form-label fw-semibold">2. @Model.SelectedArea.Key の町名を入力</label>
+                                <input class="form-control" name="town" id="town-text" type="text" value="@Model.SelectedTown"
+                                       maxlength="30" autocomplete="off" required placeholder="例：千里山西（丁目は含めない）" />
+                            }
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">郵便番号を検索</button>
+                        </div>
+                    </div>
+                    @if (!Model.SelectedArea.HasTownData)
+                    {
+                        <p class="form-text mt-2 mb-0">この地域は町名データを収録していないため、町名を入力します。API の町域名と完全に一致した場合のみ候補を表示します。</p>
+                    }
+                </form>
+            }
+            else
+            {
+                <p class="text-body-secondary mb-0">地域を選択すると、ここに町名の指定欄が表示されます。</p>
+            }
+
+            <div class="d-flex justify-content-end border-top mt-4 pt-3">
+                <a class="btn btn-outline-secondary" asp-controller="Address" asp-action="Index">← 住所検索に戻る</a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.HasSearched)
+    {
+        <section class="card mb-4" aria-live="polite">
+            <div class="card-body p-3 p-md-4">
+                <h2 class="h5">検索結果</h2>
+                @if (Model.Message is not null)
+                {
+                    <div class="alert alert-warning" role="status">@Model.Message</div>
+                }
+                @if (Model.Candidates.Count > 0)
+                {
+                    <p class="mb-2">@(Model.SelectedArea?.AddressPrefix)@(Model.SelectedTown)</p>
+                    <ul class="list-group">
+                        @foreach (var candidate in Model.Candidates)
+                        {
+                            <li class="list-group-item d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <strong>〒@candidate.FormattedZipCode</strong>
+                                <span>@(candidate.Prefecture)@(candidate.City)@(candidate.Town)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </section>
+    }
+</div>

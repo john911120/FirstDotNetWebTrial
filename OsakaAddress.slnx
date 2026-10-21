@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="OsakaAddressMvc/OsakaAddressMvc.csproj" />
+  <Project Path="OsakaAddressMvc.Tests/OsakaAddressMvc.Tests.csproj" />
+</Solution>

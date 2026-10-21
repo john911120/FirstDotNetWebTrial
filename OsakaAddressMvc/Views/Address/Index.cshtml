@@ -1,0 +1,180 @@
+@model AddressViewModel
+@{
+    ViewData["Title"] = "大阪府住所検索";
+}
+<div class="address-lab">
+    <div class="address-hero">
+        <p class="address-kicker">ASP.NET Core MVC · C# 14 · .NET 10</p>
+        <h1>大阪府住所検索</h1>
+        <p class="address-lead">大阪府の43市町村（大阪市24区・堺市7区を含む）から地域を選び、町名・丁目・番・号を指定して住所を組み立てる学習用 MVC アプリです。</p>
+        <span class="address-version">学習用 @($"v{AppInfo.Version}") · 大阪府全域対応</span>
+    </div>
+    <div class="address-grid">
+        <section class="address-panel" aria-labelledby="area-heading">
+            <div class="address-panel-heading">
+                <span class="address-step">01</span>
+                <div><h2 id="area-heading">地域を検索・選択</h2><p>市区町村名を日本語またはローマ字で検索できます（例：東淀川 / 堺 / Toyonaka / 島本）。</p></div>
+            </div>
+            <form asp-controller="Address" asp-action="Index" method="get" class="address-search" role="search">
+                <label for="keyword" class="form-label">地域名検索</label>
+                <div class="input-group">
+                    <input type="search" id="keyword" name="keyword" value="@Model.Keyword" class="form-control" placeholder="例：東淀川 / 堺市 / Suita" />
+                    <button class="btn btn-primary" type="submit">検索</button>
+                </div>
+            </form>
+            <p class="address-count">検索結果：@Model.Areas.Count 件（大阪府内の区・市町村）</p>
+            @if (Model.Areas.Count == 0)
+            {
+                <p class="address-empty">該当する地域がありません。</p>
+                <a asp-action="Index">すべて表示</a>
+            }
+            else
+            {
+                <div class="address-ward-list">
+                @foreach (var group in Model.Areas.GroupBy(a => a.Group))
+                {
+                    <p class="address-group-title">@group.Key</p>
+                    foreach (var area in group)
+                    {
+                        var isSelected = area.Key == Model.SelectedArea?.Key;
+                        <a asp-controller="Address" asp-action="Index" asp-route-area="@area.Key" asp-route-keyword="@Model.Keyword"
+                           class="address-ward @(isSelected ? "is-selected" : "")"
+                           aria-current="@(isSelected ? "page" : null)" title="@area.Key">
+                            <span>@area.ShortLabel</span>
+                            @if (area.HasTownData)
+                            {
+                                <span aria-hidden="true">→</span>
+                            }
+                            else
+                            {
+                                <span class="address-badge" title="町名は入力して指定します">入力</span>
+                            }
+                        </a>
+                    }
+                }
+                </div>
+                <p class="address-helper mt-2">「入力」の地域は町名データを収録していないため、町名を直接入力します（形式のみ検査）。</p>
+            }
+        </section>
+        <section class="address-panel" aria-labelledby="detail-heading">
+            <div class="address-panel-heading">
+                <span class="address-step">02</span>
+                <div><h2 id="detail-heading">町名・丁目・番・号</h2><p>丁目の有無は町名によって異なります。</p></div>
+            </div>
+            @if (Model.SelectedArea is null)
+            {
+                <div class="address-placeholder">左側から地域を選択してください。</div>
+            }
+            else if (Model.HasTownData)
+            {
+                <div class="address-selection">選択中：<strong>@Model.SelectedArea.AddressPrefix</strong></div>
+                <p class="address-count">町名登録数：@Model.Towns.Count 件</p>
+                <form asp-controller="Address" asp-action="Index" method="get" class="address-detail-form" id="address-detail-form">
+                    <input type="hidden" name="area" value="@Model.SelectedArea.Key" />
+                    <input type="hidden" name="keyword" value="@Model.Keyword" />
+                    <div class="mb-3">
+                        <label for="town" class="form-label">町名</label>
+                        <select class="form-select" id="town" name="town" required>
+                            <option value="">町名を選択</option>
+                            @foreach (var town in Model.Towns)
+                            {
+                                if (town == Model.SelectedTown)
+                                {
+                                    <option value="@town" selected>@town</option>
+                                }
+                                else
+                                {
+                                    <option value="@town">@town</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="chome" class="form-label">丁目</label>
+                        @if (Model.SelectedTown is null)
+                        {
+                            <select class="form-select" disabled><option>町名を先に選択してください</option></select>
+                        }
+                        else if (Model.Chomes.Count == 0)
+                        {
+                            <select class="form-select" id="chome" disabled><option>丁目なし（番・号を入力できます）</option></select>
+                            <div class="form-text">この町名には丁目がありません。例：北区角田町5-15 の「5-15」は丁目ではなく番・号です。</div>
+                        }
+                        else
+                        {
+                            <select class="form-select" name="chome" id="chome" required="@(!Model.AllowWithoutChome)">
+                                <option value="">@(Model.AllowWithoutChome ? "丁目なし" : "丁目を選択")</option>
+                                @foreach (var chome in Model.Chomes)
+                                {
+                                    if (chome == Model.SelectedChome)
+                                    {
+                                        <option value="@chome" selected>@chome</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@chome">@chome</option>
+                                    }
+                                }
+                            </select>
+                        }
+                    </div>
+                    <partial name="_BanGoInputs" model="Model" />
+                    <button class="btn btn-primary w-100" type="submit" name="mode" value="show" disabled="@(Model.SelectedTown is null)">住所を表示</button>
+                </form>
+                <p class="address-helper">町名を変更すると丁目候補が更新されます。丁目がない町は「丁目なし」で正しく、番・号を入力して住所を完成できます。</p>
+            }
+            else
+            {
+                <div class="address-selection">選択中：<strong>@Model.SelectedArea.AddressPrefix</strong></div>
+                <div class="alert alert-secondary py-2 small" role="note">
+                    この地域の町名データは未収録です。町名を入力してください。<strong>形式のみ検査し、実在する町名かどうかは確認しません。</strong>
+                    町名の確認には「郵便番号検索（API）」が利用できます。
+                </div>
+                <form asp-controller="Address" asp-action="Index" method="get" class="address-detail-form">
+                    <input type="hidden" name="area" value="@Model.SelectedArea.Key" />
+                    <input type="hidden" name="keyword" value="@Model.Keyword" />
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-8">
+                            <label for="town-text" class="form-label">町名</label>
+                            <input id="town-text" name="town" type="text" class="form-control" value="@Model.SelectedTown"
+                                   maxlength="30" autocomplete="off" required placeholder="例：千里山西" />
+                        </div>
+                        <div class="col-sm-4">
+                            <label for="chome-text" class="form-label">丁目 <span class="text-body-secondary">任意</span></label>
+                            <div class="input-group">
+                                <input id="chome-text" name="chome" type="text" class="form-control" value="@Model.SelectedChome"
+                                       inputmode="numeric" maxlength="4" autocomplete="off" placeholder="例：3" />
+                                <span class="input-group-text">丁目</span>
+                            </div>
+                        </div>
+                    </div>
+                    <partial name="_BanGoInputs" model="Model" />
+                    <button class="btn btn-primary w-100" type="submit" name="mode" value="show">住所を表示</button>
+                </form>
+                <p class="address-helper">町名は漢字・ひらがな・カタカナで30文字以内。丁目は数字（1～99）だけを入力し、町名には含めないでください。</p>
+            }
+            @if (Model.ErrorMessage is not null)
+            {
+                <div class="alert alert-warning mt-3" role="alert">@Model.ErrorMessage</div>
+            }
+            @if (Model.ResultAddress is not null)
+            {
+                <section class="address-result" aria-live="polite" aria-label="検索結果">
+                    <p>生成した住所</p><strong>@Model.ResultAddress</strong>
+                    <span>Controller → Service → ViewModel → Razor View</span>
+                    <a class="btn btn-outline-success mt-3" asp-controller="Address" asp-action="DownloadJson"
+                       asp-route-area="@Model.SelectedArea?.Key" asp-route-town="@Model.SelectedTown"
+                       asp-route-chome="@Model.SelectedChome" asp-route-ban="@Model.SelectedBan"
+                       asp-route-go="@Model.SelectedGo">選択した住所を JSON で保存</a>
+                    <a class="btn btn-outline-primary mt-2" asp-controller="PostalCode" asp-action="Index"
+                       asp-route-area="@Model.SelectedArea?.Key" asp-route-town="@Model.SelectedTown">ポストくんで郵便番号を調べる →</a>
+                </section>
+            }
+        </section>
+    </div>
+    <aside class="address-study-note">
+        <strong>学習ポイント</strong>
+        <span>市町村一覧 JSON ＋ 区別町名 JSON → Provider → LINQ（Where / Select / GroupBy）→ Controller → Razor</span>
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Address" asp-action="DownloadDataset">大阪府データを JSON でダウンロード</a>
+    </aside>
+</div>

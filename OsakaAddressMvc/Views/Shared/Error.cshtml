@@ -1,0 +1,21 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "エラー";
+}
+
+<h1 class="text-danger h3">エラーが発生しました</h1>
+<p>リクエストの処理中に問題が発生しました。時間をおいて再度お試しください。</p>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>リクエスト ID：</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<p class="text-body-secondary small">
+    詳細なエラー内容は、環境変数 <code>ASPNETCORE_ENVIRONMENT</code> を <code>Development</code> に設定したローカル環境でのみ表示されます。
+    本番環境では Development を有効にしないでください（例外の内容が利用者に表示されるおそれがあります）。
+</p>
+
+<a class="btn btn-outline-primary" asp-controller="Address" asp-action="Index">住所検索に戻る</a>

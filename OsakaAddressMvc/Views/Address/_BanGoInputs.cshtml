@@ -1,0 +1,21 @@
+@model AddressViewModel
+@{
+    // v0.5: 町名を選択する地域・入力する地域の両方で使う番・号の入力欄（部分ビュー）。
+    // 町名を一覧から選ぶ地域では、町名を選ぶまで入力欄を無効にする。
+    var disabled = Model.HasTownData && Model.SelectedTown is null;
+}
+<div class="row g-3 mb-3">
+    <div class="col-sm-6">
+        <label for="ban" class="form-label">番（街区符号） <span class="text-body-secondary">任意</span></label>
+        <input id="ban" name="ban" type="text" class="form-control" value="@Model.SelectedBan"
+               inputmode="numeric" pattern="[0-9０-９]{1,6}" maxlength="6" autocomplete="off"
+               placeholder="例：5" aria-describedby="address-number-help" disabled="@disabled" />
+    </div>
+    <div class="col-sm-6">
+        <label for="go" class="form-label">号（住居番号） <span class="text-body-secondary">任意</span></label>
+        <input id="go" name="go" type="text" class="form-control" value="@Model.SelectedGo"
+               inputmode="numeric" pattern="[0-9０-９]{1,6}" maxlength="6" autocomplete="off"
+               placeholder="例：15" aria-describedby="address-number-help" disabled="@disabled" />
+    </div>
+</div>
+<p class="form-text mb-3" id="address-number-help">例：大阪市北区 → 角田町 → 丁目なし → 番 5・号 15。号を入力する場合は番も入力してください。数値は形式のみ検査し、実在性は確認しません。</p>

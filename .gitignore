@@ -1,0 +1,22 @@
+# ビルド成果物
+bin/
+obj/
+
+# IDE・エディターの設定（個人ごとの設定は共有しない）
+.vs/
+.idea/
+.vscode/
+*.user
+*.DotSettings.user
+
+# テスト結果・カバレッジ
+TestResults/
+coverage*/
+
+# OS が作るファイル
+.DS_Store
+Thumbs.db
+
+# ローカルの秘密情報（接続文字列などは環境変数で渡す）
+*.env
+.env*

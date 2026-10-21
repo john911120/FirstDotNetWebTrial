@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OsakaAddressMvc</title>
+    <script>
+        // Bootstrap 5.3 の色モード。再訪問時のちらつきを防ぐため、CSS の読み込み前に適用する。
+        try { document.documentElement.setAttribute('data-bs-theme', localStorage.getItem('osaka-theme') === 'dark' ? 'dark' : 'light'); }
+        catch { /* 保存できない環境ではライトモードを使用 */ }
+    </script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/address.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/OsakaAddressMvc.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm border-bottom bg-body-tertiary mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Address" asp-action="Index">Osaka Address MVC</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation"
+                        aria-controls="mainNavigation" aria-expanded="false" aria-label="メニューを開く">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavigation">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Address" asp-action="Index">住所検索</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="PostalCode" asp-action="Index">郵便番号検索（API）</a></li>
+                    </ul>
+                    <button id="theme-toggle" type="button" class="btn btn-outline-secondary btn-sm" aria-label="ライトモードとダークモードを切り替え" aria-pressed="false">🌙 ダークモード</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">@RenderBody()</main>
+    </div>
+    <footer class="border-top footer text-body-secondary py-3 mt-4">
+        <div class="container">&copy; 2026 OsakaAddressMvc · ASP.NET Core MVC 学習用</div>
+    </footer>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

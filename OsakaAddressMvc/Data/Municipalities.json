@@ -1,0 +1,551 @@
+{
+  "prefecture": "大阪府",
+  "prefectureCode": "27",
+  "sourceUrl": "https://www.pref.osaka.lg.jp/o040050/shichoson/juki/juki2012.html",
+  "municipalities": [
+    {
+      "code": "27100",
+      "name": "大阪市",
+      "roman": "Osaka",
+      "kind": "政令指定都市",
+      "county": null,
+      "hasTownData": true,
+      "wards": [
+        {
+          "code": "27102",
+          "name": "都島区",
+          "roman": "Miyakojima"
+        },
+        {
+          "code": "27103",
+          "name": "福島区",
+          "roman": "Fukushima"
+        },
+        {
+          "code": "27104",
+          "name": "此花区",
+          "roman": "Konohana"
+        },
+        {
+          "code": "27106",
+          "name": "西区",
+          "roman": "Nishi"
+        },
+        {
+          "code": "27107",
+          "name": "港区",
+          "roman": "Minato"
+        },
+        {
+          "code": "27108",
+          "name": "大正区",
+          "roman": "Taisho"
+        },
+        {
+          "code": "27109",
+          "name": "天王寺区",
+          "roman": "Tennoji"
+        },
+        {
+          "code": "27111",
+          "name": "浪速区",
+          "roman": "Naniwa"
+        },
+        {
+          "code": "27113",
+          "name": "西淀川区",
+          "roman": "Nishiyodogawa"
+        },
+        {
+          "code": "27114",
+          "name": "東淀川区",
+          "roman": "Higashiyodogawa"
+        },
+        {
+          "code": "27115",
+          "name": "東成区",
+          "roman": "Higashinari"
+        },
+        {
+          "code": "27116",
+          "name": "生野区",
+          "roman": "Ikuno"
+        },
+        {
+          "code": "27117",
+          "name": "旭区",
+          "roman": "Asahi"
+        },
+        {
+          "code": "27118",
+          "name": "城東区",
+          "roman": "Joto"
+        },
+        {
+          "code": "27119",
+          "name": "阿倍野区",
+          "roman": "Abeno"
+        },
+        {
+          "code": "27120",
+          "name": "住吉区",
+          "roman": "Sumiyoshi"
+        },
+        {
+          "code": "27121",
+          "name": "東住吉区",
+          "roman": "Higashisumiyoshi"
+        },
+        {
+          "code": "27122",
+          "name": "西成区",
+          "roman": "Nishinari"
+        },
+        {
+          "code": "27123",
+          "name": "淀川区",
+          "roman": "Yodogawa"
+        },
+        {
+          "code": "27124",
+          "name": "鶴見区",
+          "roman": "Tsurumi"
+        },
+        {
+          "code": "27125",
+          "name": "住之江区",
+          "roman": "Suminoe"
+        },
+        {
+          "code": "27126",
+          "name": "平野区",
+          "roman": "Hirano"
+        },
+        {
+          "code": "27127",
+          "name": "北区",
+          "roman": "Kita"
+        },
+        {
+          "code": "27128",
+          "name": "中央区",
+          "roman": "Chuo"
+        }
+      ]
+    },
+    {
+      "code": "27140",
+      "name": "堺市",
+      "roman": "Sakai",
+      "kind": "政令指定都市",
+      "county": null,
+      "hasTownData": false,
+      "wards": [
+        {
+          "code": "27141",
+          "name": "堺区",
+          "roman": "Sakai"
+        },
+        {
+          "code": "27142",
+          "name": "中区",
+          "roman": "Naka"
+        },
+        {
+          "code": "27143",
+          "name": "東区",
+          "roman": "Higashi"
+        },
+        {
+          "code": "27144",
+          "name": "西区",
+          "roman": "Nishi"
+        },
+        {
+          "code": "27145",
+          "name": "南区",
+          "roman": "Minami"
+        },
+        {
+          "code": "27146",
+          "name": "北区",
+          "roman": "Kita"
+        },
+        {
+          "code": "27147",
+          "name": "美原区",
+          "roman": "Mihara"
+        }
+      ]
+    },
+    {
+      "code": "27202",
+      "name": "岸和田市",
+      "roman": "Kishiwada",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27203",
+      "name": "豊中市",
+      "roman": "Toyonaka",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27204",
+      "name": "池田市",
+      "roman": "Ikeda",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27205",
+      "name": "吹田市",
+      "roman": "Suita",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27206",
+      "name": "泉大津市",
+      "roman": "Izumiotsu",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27207",
+      "name": "高槻市",
+      "roman": "Takatsuki",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27208",
+      "name": "貝塚市",
+      "roman": "Kaizuka",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27209",
+      "name": "守口市",
+      "roman": "Moriguchi",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27210",
+      "name": "枚方市",
+      "roman": "Hirakata",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27211",
+      "name": "茨木市",
+      "roman": "Ibaraki",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27212",
+      "name": "八尾市",
+      "roman": "Yao",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27213",
+      "name": "泉佐野市",
+      "roman": "Izumisano",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27214",
+      "name": "富田林市",
+      "roman": "Tondabayashi",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27215",
+      "name": "寝屋川市",
+      "roman": "Neyagawa",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27216",
+      "name": "河内長野市",
+      "roman": "Kawachinagano",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27217",
+      "name": "松原市",
+      "roman": "Matsubara",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27218",
+      "name": "大東市",
+      "roman": "Daito",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27219",
+      "name": "和泉市",
+      "roman": "Izumi",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27220",
+      "name": "箕面市",
+      "roman": "Minoh",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27221",
+      "name": "柏原市",
+      "roman": "Kashiwara",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27222",
+      "name": "羽曳野市",
+      "roman": "Habikino",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27223",
+      "name": "門真市",
+      "roman": "Kadoma",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27224",
+      "name": "摂津市",
+      "roman": "Settsu",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27225",
+      "name": "高石市",
+      "roman": "Takaishi",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27226",
+      "name": "藤井寺市",
+      "roman": "Fujiidera",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27227",
+      "name": "東大阪市",
+      "roman": "Higashiosaka",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27228",
+      "name": "泉南市",
+      "roman": "Sennan",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27229",
+      "name": "四條畷市",
+      "roman": "Shijonawate",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27230",
+      "name": "交野市",
+      "roman": "Katano",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27231",
+      "name": "大阪狭山市",
+      "roman": "Osakasayama",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27232",
+      "name": "阪南市",
+      "roman": "Hannan",
+      "kind": "市",
+      "county": null,
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27301",
+      "name": "島本町",
+      "roman": "Shimamoto",
+      "kind": "町",
+      "county": "三島郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27321",
+      "name": "豊能町",
+      "roman": "Toyono",
+      "kind": "町",
+      "county": "豊能郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27322",
+      "name": "能勢町",
+      "roman": "Nose",
+      "kind": "町",
+      "county": "豊能郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27341",
+      "name": "忠岡町",
+      "roman": "Tadaoka",
+      "kind": "町",
+      "county": "泉北郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27361",
+      "name": "熊取町",
+      "roman": "Kumatori",
+      "kind": "町",
+      "county": "泉南郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27362",
+      "name": "田尻町",
+      "roman": "Tajiri",
+      "kind": "町",
+      "county": "泉南郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27366",
+      "name": "岬町",
+      "roman": "Misaki",
+      "kind": "町",
+      "county": "泉南郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27381",
+      "name": "太子町",
+      "roman": "Taishi",
+      "kind": "町",
+      "county": "南河内郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27382",
+      "name": "河南町",
+      "roman": "Kanan",
+      "kind": "町",
+      "county": "南河内郡",
+      "hasTownData": false,
+      "wards": []
+    },
+    {
+      "code": "27383",
+      "name": "千早赤阪村",
+      "roman": "Chihayaakasaka",
+      "kind": "村",
+      "county": "南河内郡",
+      "hasTownData": false,
+      "wards": []
+    }
+  ]
+}
