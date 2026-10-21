@@ -7,7 +7,7 @@
 ![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET_Core-MVC-512BD4)
 ![xUnit](https://img.shields.io/badge/xUnit-58_passed_%2F_1_skipped-1a7f37)
 
-長く Java（Spring Boot）で仕事をしてきましたが、C# と .NET に触れるのはこれが初めてです。入社後の研修期間に、Microsoft Learn を見ながら **LINQ の練習** として小さな住所検索を作り始め、気づけば大阪府全域の住所を扱い、自動テストまで備えたアプリになりました。
+長く Java（Spring Boot）で仕事をしてきましたが、C# と .NET に触れるのはこれが初めてです。Microsoft Learn を見ながら **LINQ の練習** として小さな住所検索を作り始め、気づけば大阪府全域の住所を扱い、自動テストまで備えたアプリになりました。
 
 このリポジトリは、その「最初の一歩」の記録です。
 
