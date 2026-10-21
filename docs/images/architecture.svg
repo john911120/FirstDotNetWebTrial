@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="t d">
+  <title id="t">OsakaAddressMvc の構成図</title>
+  <desc id="d">ブラウザーからのリクエストが Controller、Service、AddressDataProvider を経て JSON データに届き、郵便番号検索だけが外部のポストくん API を呼び出す構成。設定は appsettings.json から Options として注入し、xUnit のテストが Service を直接検証する。</desc>
+  <style>
+    text { font-family: "Noto Sans JP", "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif; fill: #1f2328; }
+    .h { font-size: 20px; font-weight: 700; }
+    .label { font-size: 15px; font-weight: 700; }
+    .sub { font-size: 12.5px; fill: #59636e; }
+    .tag { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; }
+    .box { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.5; }
+    .arrow { stroke: #59636e; stroke-width: 1.8; fill: none; marker-end: url(#ah); }
+    .dash { stroke-dasharray: 6 5; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#59636e"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="560" rx="18" fill="#f6f8fa"/>
+  <text x="32" y="44" class="h">OsakaAddressMvc の構成（v0.5.5）</text>
+  <text x="32" y="68" class="sub">Controller → Service → データ の3層。外部 API に依存するのは郵便番号検索だけ。</text>
+
+  <!-- Browser -->
+  <rect x="32" y="110" width="150" height="86" rx="12" class="box"/>
+  <text x="107" y="146" text-anchor="middle" class="label">ブラウザー</text>
+  <text x="107" y="168" text-anchor="middle" class="sub">Razor で生成した</text>
+  <text x="107" y="184" text-anchor="middle" class="sub">HTML を表示</text>
+
+  <!-- Controllers -->
+  <rect x="232" y="96" width="210" height="160" rx="12" class="box" style="stroke:#0969da"/>
+  <text x="248" y="120" class="tag" fill="#0969da" style="fill:#0969da">CONTROLLERS</text>
+  <text x="248" y="148" class="label">AddressController</text>
+  <text x="248" y="166" class="sub">住所の組み立て・JSON 出力</text>
+  <text x="248" y="194" class="label">PostalCodeController</text>
+  <text x="248" y="212" class="sub">郵便番号検索（POST）</text>
+  <text x="248" y="240" class="label">ErrorController</text>
+
+  <!-- Services -->
+  <rect x="492" y="96" width="220" height="160" rx="12" class="box" style="stroke:#8250df"/>
+  <text x="508" y="120" class="tag" style="fill:#8250df">SERVICES</text>
+  <text x="508" y="148" class="label">AddressService</text>
+  <text x="508" y="166" class="sub">LINQ で地域・町名を検索</text>
+  <text x="508" y="182" class="sub">入力の正規化と検証</text>
+  <text x="508" y="212" class="label">PostkunPostalCodeService</text>
+  <text x="508" y="230" class="sub">HttpClient・async/await</text>
+
+  <!-- Data provider -->
+  <rect x="762" y="96" width="166" height="96" rx="12" class="box" style="stroke:#1a7f37"/>
+  <text x="778" y="120" class="tag" style="fill:#1a7f37">DATA</text>
+  <text x="778" y="148" class="label">AddressData</text>
+  <text x="778" y="166" class="label">Provider</text>
+  <text x="778" y="184" class="sub">起動時に読込・検証</text>
+
+  <rect x="762" y="214" width="166" height="74" rx="12" class="box"/>
+  <text x="778" y="240" class="label">Data/*.json</text>
+  <text x="778" y="259" class="sub">43市町村・72地域</text>
+  <text x="778" y="275" class="sub">大阪市24区・580町名</text>
+
+  <!-- External API -->
+  <rect x="492" y="318" width="220" height="70" rx="12" fill="#fff8f2" stroke="#bc4c00" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="508" y="344" class="tag" style="fill:#bc4c00">EXTERNAL</text>
+  <text x="508" y="370" class="label">ポストくん REST API</text>
+
+  <!-- Options -->
+  <rect x="232" y="318" width="210" height="70" rx="12" class="box"/>
+  <text x="248" y="344" class="label">appsettings.json</text>
+  <text x="248" y="364" class="sub">IOptions&lt;T&gt; で DataProvider と</text>
+  <text x="248" y="380" class="sub">HttpClient に注入</text>
+
+  <!-- Tests -->
+  <rect x="32" y="420" width="896" height="108" rx="12" fill="#ffffff" stroke="#1a7f37" stroke-width="1.5"/>
+  <text x="52" y="448" class="tag" style="fill:#1a7f37">OsakaAddressMvc.Tests（xUnit）</text>
+  <text x="52" y="476" class="label">59 テスト：成功 58・スキップ 1</text>
+  <text x="52" y="500" class="sub">住所の組み立て／地域データ／ポストくん API（偽の HttpMessageHandler で外部接続なし）／DB 疎通確認（環境変数があるときだけ実行）</text>
+
+  <!-- arrows -->
+  <path d="M182 153 H228" class="arrow"/>
+  <path d="M442 176 H488" class="arrow"/>
+  <path d="M712 144 H758" class="arrow"/>
+  <path d="M845 192 V210" class="arrow"/>
+  <path d="M602 256 V314" class="arrow dash"/>
+  <path d="M467 420 V232 H488" class="arrow" style="stroke:#1a7f37;stroke-dasharray:4 4"/>
+  <text x="475" y="410" class="sub" style="fill:#1a7f37">検証</text>
+</svg>
