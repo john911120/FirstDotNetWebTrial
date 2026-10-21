@@ -117,7 +117,7 @@ FirstDotNetWebTrial/
 ## 参考にしたもの
 
 - [Microsoft Learn（.NET / ASP.NET Core のドキュメント）](https://learn.microsoft.com/ja-jp/dotnet/)
-- [++C++; // 未確認飛行 C](https://ufcpp.net/)（先輩に教えてもらった C# の解説サイト）
+- [++C++; // 未確認飛行 C](https://ufcpp.net/)（C# の解説サイト）
 - [ポストくん REST API](https://postcode.teraren.com/doc)
 - [大阪市 区別町名一覧](https://www.city.osaka.lg.jp/shimin/page/0000061040.html)
 
