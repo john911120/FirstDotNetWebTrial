@@ -57,7 +57,7 @@
 | 気づいたこと | Java / Spring Boot では | C# / ASP.NET Core では |
 | --- | --- | --- |
 | テストの置き場所 | 同じモジュールの `src/test/java` | **別プロジェクト**。Web プロジェクトのフォルダーの外に置かないとビルドが壊れる |
-| 複数プロジェクトのまとめ方 | 親 pom / `settings.gradle` | ソリューション（`.slnx`） |
+| 複数プロジェクトのまとめ方 | 親 pom.xml / `settings.gradle` | ソリューション（`.slnx`） |
 | アノテーション | インターフェースの一種。継承できない | 属性（Attribute）は**クラス**。`FactAttribute` を継承して `[DatabaseFact]` を作れた |
 | getter / setter | Lombok に頼ることが多い | プロパティ `{ get; set; }` と `record` が言語に組み込み |
 | 設定のバインド | `@ConfigurationProperties` | `IOptions<T>` |
