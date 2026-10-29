@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OsakaAddressMvc;
 using OsakaAddressMvc.Infrastructure;
+using OsakaAddressMvc.Infrastructure.Database;
 using OsakaAddressMvc.Models;
 using OsakaAddressMvc.Services;
 
@@ -17,8 +19,25 @@ builder.Services.AddOptions<AddressDataOptions>()
             options.DataDirectory = Path.Combine(builder.Environment.ContentRootPath, options.DataDirectory);
     });
 
-// v0.6.0-alpha.2: 住所データの読み込み元。v0.6.0 で設定により DB（PostgreSQL）に切り替えられるようにする。
-builder.Services.AddSingleton<IAddressDataSource, JsonAddressDataSource>();
+// v0.6.0: 住所データの読み込み元を AddressData:Source で切り替える（Json：既定 / Database：PostgreSQL）。
+// AddressDataProvider・AddressService・画面は IAddressDataSource だけを見るため、ここ以外は変更不要。
+var addressDataSource = builder.Configuration.GetSection(AddressDataOptions.SectionName)
+    .GetValue(nameof(AddressDataOptions.Source), AddressDataSourceKind.Json);
+if (addressDataSource == AddressDataSourceKind.Database)
+{
+    var connectionString = builder.Configuration.GetConnectionString(DatabaseOptions.ConnectionStringName);
+    if (string.IsNullOrWhiteSpace(connectionString))
+        throw new InvalidOperationException(
+            $"AddressData:Source が Database の場合は、接続文字列 ConnectionStrings:{DatabaseOptions.ConnectionStringName} を設定してください。");
+
+    // DbContext は短命（Scoped）なので、Singleton の DatabaseAddressDataSource にはファクトリーを渡す。
+    builder.Services.AddDbContextFactory<AddressDbContext>(options => options.UseNpgsql(connectionString));
+    builder.Services.AddSingleton<IAddressDataSource, DatabaseAddressDataSource>();
+}
+else
+{
+    builder.Services.AddSingleton<IAddressDataSource, JsonAddressDataSource>();
+}
 builder.Services.AddSingleton<AddressDataProvider>();
 builder.Services.AddSingleton<AddressService>();
 
@@ -45,13 +64,16 @@ builder.Services.AddHttpClient<PostkunPostalCodeService>((services, client) =>
 
 var app = builder.Build();
 
-// 起動時に大阪府の市町村一覧（43件）と大阪市24区の町名 JSON を読み込んで検証する。
-// データに不備があれば、この時点で起動を中止する。
-app.Services.GetRequiredService<AddressDataProvider>();
-
 // v0.6: 起動時に DB マイグレーションを実行する（Database:MigrateOnStartup が true の場合）。
 // 失敗した場合は起動を中止する。接続文字列が未設定なら警告のみ出し、DB なしで起動を続ける。
+// v0.6.0: DB から住所データを読む場合に備えて、データの読み込みより「先に」実行する。
 RunDatabaseMigration(app);
+
+// 起動時に大阪府の市町村一覧（43件）と大阪市24区の町名データを読み込んで検証する。
+// データに不備があれば、この時点で起動を中止する。
+var dataSource = app.Services.GetRequiredService<IAddressDataSource>();
+app.Services.GetRequiredService<AddressDataProvider>();
+app.Logger.LogInformation("住所データの読み込み元：{Source}", dataSource.SourceName);
 
 if (!app.Environment.IsDevelopment())
 {

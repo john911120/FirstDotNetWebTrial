@@ -9,6 +9,17 @@ public sealed class AddressDataOptions
 
     // 相対パスの場合は、Program.cs でアプリのコンテンツルートを基準に絶対パスへ変換する。
     public string DataDirectory { get; set; } = "Data";
+
+    // v0.6.0: 住所データの読み込み元。Json（既定）または Database（PostgreSQL）。
+    // Database の場合は ConnectionStrings:OAMVC が必要。PC ごとに User Secrets で切り替えられる。
+    public AddressDataSourceKind Source { get; set; } = AddressDataSourceKind.Json;
+}
+
+// v0.6.0: 住所データの読み込み元の種類。
+public enum AddressDataSourceKind
+{
+    Json,       // Data/ の JSON ファイル（JsonAddressDataSource）
+    Database    // PostgreSQL（DatabaseAddressDataSource・EF Core）
 }
 
 // 郵便番号 API（ポストくん）の接続設定。appsettings.json の "PostalCodeApi" セクション。

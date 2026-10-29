@@ -17,6 +17,7 @@ namespace OsakaAddressMvc.Tests;
 //   dotnet test --filter "FullyQualifiedName~DatabaseMigrationTests" --logger "console;verbosity=detailed"
 //   Remove-Item Env:OSAKA_MIGRATION_TEST_DB
 // ============================================================================
+[Collection(DatabaseCollection.Name)]   // DB を使うテストは並列に実行しない
 public sealed class DatabaseMigrationTests(ITestOutputHelper output)
 {
     private static readonly string? ConnectionString =

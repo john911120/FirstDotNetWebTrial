@@ -56,6 +56,7 @@ namespace OsakaAddressMvc.Tests;
 // クラス名・接続文字列・確認 SQL を差し替えるだけで、下のテストの構造はそのまま使える。
 // ============================================================================
 
+[Collection(DatabaseCollection.Name)]   // DB を使うテストは並列に実行しない
 public sealed class DatabaseConnectionTests(ITestOutputHelper output)
 {
     // [DatabaseFact] がスキップしなかった時点で、環境変数は設定済みであることが保証される。

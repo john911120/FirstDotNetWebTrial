@@ -5,7 +5,7 @@
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
 ![C# 14](https://img.shields.io/badge/C%23-14-239120)
 ![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET_Core-MVC-512BD4)
-![xUnit](https://img.shields.io/badge/xUnit-60_passed_%2F_2_skipped-1a7f37)
+![xUnit](https://img.shields.io/badge/xUnit-64_passed_%2F_3_skipped-1a7f37)
 
 長く Java（Spring Boot）で仕事をしてきましたが、C# と .NET に触れるのはこれが初めてです。Microsoft Learn を見ながら **LINQ の練習** として小さな住所検索を作り始め、気づけば大阪府全域の住所を扱い、自動テストまで備えたアプリになりました。
 
@@ -34,7 +34,7 @@
 | 外部連携 | `HttpClient`（Typed Client）、`async` / `await`、ポストくん REST API |
 | 設定 | `appsettings.json` + Options パターン（`IOptions<T>`） |
 | テスト | xUnit、偽の `HttpMessageHandler`、環境変数で実行を切り替える独自属性 `[DatabaseFact]` |
-| データ | JSON（大阪府の市町村一覧、大阪市24区・580町名） |
+| データ | JSON または PostgreSQL（設定で切り替え）。DbUp でマイグレーション、EF Core で読み込み |
 
 ## 歩み
 
@@ -83,7 +83,7 @@
 git clone https://github.com/john911120/FirstDotNetWebTrial.git
 cd FirstDotNetWebTrial
 
-dotnet test                                # 自動テスト（62件中60件成功・DB を使う2件はスキップ）
+dotnet test                                # 自動テスト（67件中64件成功・DB を使う3件はスキップ）
 dotnet run --project OsakaAddressMvc       # 表示された https://localhost:xxxx を開く
 ```
 
@@ -107,10 +107,10 @@ FirstDotNetWebTrial/
 
 アプリの詳しい仕様、各バージョンの変更内容、データの出典は [OsakaAddressMvc/README.md](OsakaAddressMvc/README.md)、確認手順は [OsakaAddressMvc/TEST_PLAN.md](OsakaAddressMvc/TEST_PLAN.md) にまとめています。
 
-## 次の目標（v0.6）
+## v0.6 の歩みと次の目標
 
 - ✅ **v0.6.0-alpha.1**：DbUp で PostgreSQL にテーブルと初期データ（43市町村・580町名・1,815丁目）を登録する。Spring Boot の Flyway と同じ「SQL ファイルでスキーマ履歴を管理する」考え方を、NuGet パッケージ1つで実現した
-- EF Core（Npgsql）で DB から読み込み、JSON と DB をインターフェースで切り替えられるようにする
+- ✅ **v0.6.0**：EF Core（Npgsql）で DB から読み込み、JSON と DB を設定ひとつで切り替えられるようにした。読み込み元をインターフェース（`IAddressDataSource`）で抽象化し、DB から読んだデータが元の JSON と完全に一致することをテストで確認
 - 住所を正規化する Web API を追加し、OpenAPI で公開する
 - 同じ API を Spring Boot でも作り、Java と C# を並べて比べる
 

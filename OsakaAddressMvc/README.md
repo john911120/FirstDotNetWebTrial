@@ -1,12 +1,14 @@
-# Osaka Address MVC（学習用 v0.6.0-alpha.1）
+# Osaka Address MVC（学習用 v0.6.0）
 
-ASP.NET Core MVC / C# 14 / .NET 10 の練習用プロジェクトです。**大阪府の43市町村（33市・9町・1村）** を対象に、地域（大阪市24区・堺市7区・その他の市町村）を選び、**町名・丁目（ある場合）・番・号** を指定して住所を組み立て、検索結果やデータ一式を JSON ファイルとしてダウンロードできます。Rider、Visual Studio、VS Code のいずれでも編集できます。v0.6.0-alpha.1 で **DbUp による PostgreSQL へのマイグレーション**を追加しました（画面は引き続き JSON を使用。EF Core・Docker は未導入）。
+ASP.NET Core MVC / C# 14 / .NET 10 の練習用プロジェクトです。**大阪府の43市町村（33市・9町・1村）** を対象に、地域（大阪市24区・堺市7区・その他の市町村）を選び、**町名・丁目（ある場合）・番・号** を指定して住所を組み立て、検索結果やデータ一式を JSON ファイルとしてダウンロードできます。Rider、Visual Studio、VS Code のいずれでも編集できます。v0.6 で **PostgreSQL を導入**しました。DbUp でテーブルと初期データを登録し、EF Core で読み込みます。データ元は設定で JSON（既定）と DB を切り替えられます。
 
 - v0.3：ポストくん公開 API による郵便番号検索を別 URL に追加（APIキー不要。既存の住所検索は外部API障害の影響を受けません）。
 - v0.4：起動時のデータ検証、`JsonSerializerOptions` の再利用、xUnit による自動テストを追加。
 - v0.5：対象を大阪市から大阪府全域へ拡張（詳細は「v0.5 の更新内容」）。
 - v0.5.5：機能は変えずに整理・テスト強化（設定の外部化、ポストくん API のテスト、DB 接続テストの安全化。詳細は「v0.5.5 の更新内容」）。
-- **v0.6.0-alpha.1：DbUp で住所データを PostgreSQL に登録**（テーブル作成・初期データ・起動時マイグレーション。詳細は「v0.6.0-alpha.1 の更新内容」）。
+- v0.6.0-alpha.1：DbUp で住所データを PostgreSQL に登録（テーブル作成・初期データ・起動時マイグレーション。詳細は「v0.6.0-alpha.1 の更新内容」）。
+- v0.6.0-alpha.2：データ元を `IAddressDataSource` で抽象化（JSON 実装のみ、動作は変更なし）。
+- **v0.6.0：EF Core で PostgreSQL から読み込み、JSON と DB を設定で切り替え**（詳細は「v0.6.0 の更新内容」）。
 
 ## v0.1 の概要
 
@@ -271,6 +273,61 @@ Java（Spring Boot）では `flyway-core` を依存関係に追加するだけ�
 - `DatabaseMigrationTests`（手動実行）：環境変数 `OSAKA_MIGRATION_TEST_DB` を設定したときだけ、実際の DB にマイグレーションを2回適用し、全データが登録されること・2回目は何も実行されないことを確認します。**必ずテスト専用の空の DB を指定してください。**
 - `[DatabaseFact]` は環境変数名を指定できるようにしました（`[DatabaseFact(DatabaseFactAttribute.MigrationEnvironmentVariable)]`）。
 
+## v0.6.0-alpha.2 の更新内容（データ元の抽象化）
+
+**目的：住所データを「どこから読むか」と「読んだデータの検証」を分け、JSON 以外のデータ元（DB）を追加できるようにする。** 動作は変更していません（JSON 実装のみ）。
+
+- `Services/IAddressDataSource.cs`：データ元を表すインターフェース。`LoadPrefecture()`・`LoadOsakaCityWards()` と、エラーメッセージ用の `SourceName` を持ちます。
+- `Services/JsonAddressDataSource.cs`：これまで `AddressDataProvider` が行っていた JSON の読み込みを移しました。ここではファイルの有無と JSON の形式だけを確認します。
+- `AddressDataProvider` は `IAddressDataSource` を受け取り、**データ元に関係なく必要な検証**（43市町村・24区の件数、名前・コードの重複、市町村一覧と区別町名データの一致）だけを行います。
+- 振り分けの基準は「DB から読んでも同じ検査が必要か」です。必要なものは Provider に、JSON ファイルにだけ関係するものは JsonAddressDataSource に置いています。
+- 区別町名データは `Dictionary` ではなく `IReadOnlyList` で受け取ります。区名の重複検査を Provider 側で共通に行うためです。
+- 移行時、`wards.Add(data)` を `throw` の直後（到達しない位置）に置いたため、区データが常に0件になりテスト59件が失敗しました。コンパイラーの警告 **CS0162「到達できないコードが検出されました」** で気づけるため、ビルド成功時も警告を確認するようにしています。
+
+## v0.6.0 の更新内容（EF Core で DB から読み込む）
+
+**目的：DbUp で登録した PostgreSQL のデータを EF Core で読み込み、設定ひとつで JSON と DB を切り替えられるようにする。** これで v0.6 の計画（PostgreSQL の導入）が完了します。
+
+### 1. 構成
+
+| ファイル | 内容 |
+| --- | --- |
+| `Infrastructure/Database/AddressDbContext.cs` | EF Core の DbContext。読み取り専用（`AsNoTracking`）の `IQueryable` を公開 |
+| `Infrastructure/Database/AddressRows.cs` | テーブル1行に対応するエンティティ。`[Table]`・`[Column]`・`[PrimaryKey]` 属性で snake_case の名前と複合キーを指定 |
+| `Services/DatabaseAddressDataSource.cs` | `IAddressDataSource` の DB 実装。LINQ（`join`・`OrderBy`・`ToLookup`）で読み込み、JSON 実装と同じ `PrefectureData`・`WardData` に詰め替える |
+| `db/migration/V004__create_prefectures.sql` | 都道府県テーブル（JSON の先頭にあった名前・コード・出典）を追加 |
+
+- パッケージ：`Npgsql.EntityFrameworkCore.PostgreSQL` 10.0.3
+- **スキーマの管理は DbUp に一本化**しています。EF Core のマイグレーション機能は使わず、`EnsureCreated()`・`Database.Migrate()` も呼びません。
+- 都道府県の情報は適用済みの `V001` を書き換えず、`V004` として追加しました（マイグレーションの原則）。
+- `AddressService`・コントローラー・画面は変更していません。v0.6.0-alpha.2 の抽象化により、データ元が変わっても `AddressDataProvider` から先は同じコードで動きます。
+
+### 2. Singleton と DbContext の寿命
+
+`AddressDataProvider` は Singleton（アプリ全体で1つ）、DbContext は Scoped（リクエストごとに作って捨てる短命なオブジェクト）です。Singleton に DbContext を直接注入すると寿命が合わないため、`AddDbContextFactory` でファクトリーを登録し、`DatabaseAddressDataSource` は読み込むときだけ DbContext を作成して、読み終わったらすぐに破棄します。
+
+### 3. データ元の切り替え
+
+`appsettings.json` の `AddressData:Source` で切り替えます（既定は `Json`）。PC ごとに切り替えられるよう、DB を使う PC では User Secrets で設定するのがおすすめです。
+
+```powershell
+cd OsakaAddressMvc
+dotnet user-secrets set "AddressData:Source" "Database"
+dotnet run
+```
+
+- `Database` の場合は `ConnectionStrings:OAMVC` が必須です（未設定なら起動時にエラー）。
+- 起動時の順序を「DbUp のマイグレーション → 住所データの読み込みと検証」に変更しました。初回起動でも、テーブルを作成してから DB を読み込みます。
+- 起動ログに `住所データの読み込み元：PostgreSQL（ConnectionStrings:OAMVC）` のように表示されます。
+- 開発環境（`appsettings.Development.json`）では EF Core が実行する SQL をログに出力します。LINQ がどのような SQL に変換されるかを確認できます。
+
+### 4. テスト
+
+- `AddressDataProviderTests`（DB 不要）：実際の JSON を読み込んだあとで一部を書き換える「偽のデータ元」を渡し、市町村が42件・区が23区・区名の重複のときに例外になることを確認します。JSON ファイルを書き換えずに検証ロジックをテストできるのが、抽象化の効果です。
+- `DatabaseAddressDataSourceTests`（手動・`OSAKA_MIGRATION_TEST_DB`）：DbUp で初期データを登録し、EF Core で読み込んだ72地域・市町村一覧・24区の町名と丁目が、**元の JSON と完全に一致する**ことを確認します。
+- DB を使う3つのテストクラスは `[Collection(DatabaseCollection.Name)]` で同じコレクションにまとめ、**並列に実行しない**ようにしています。xUnit は既定でテストクラス同士を並列に実行するため、最初は2つのテストが同じテスト用 DB に同時に V004 を適用し、PostgreSQL のエラー（`23505: duplicate key value violates unique constraint "pg_type_typname_nsp_index"`）で失敗しました。
+- 同じ理由で、本番環境のように**複数のアプリが同時に起動する場合**は、起動時マイグレーション（`MigrateOnStartup`）を有効にせず、デプロイの手順として1回だけ実行するのが安全です（DbUp は Flyway のような DB ロックを取らないため）。
+
 ## ディレクトリ構成
 
 ```text
@@ -288,12 +345,16 @@ OsakaAddressMvc/
 │   └── ErrorViewModel.cs        # エラー画面用モデル
 ├── Services/
 │   ├── AddressService.cs        # LINQ、住所選択・組み立て、出力オブジェクト生成
-│   ├── AddressDataProvider.cs   # 市町村一覧と区ごとの JSON の読み込み・起動時検証
+│   ├── AddressDataProvider.cs   # 住所データの起動時検証と地域一覧の作成（データ元に依存しない）
+│   ├── IAddressDataSource.cs    # v0.6.0-alpha.2 データ元のインターフェース
+│   ├── JsonAddressDataSource.cs # v0.6.0-alpha.2 JSON からの読み込み
+│   ├── DatabaseAddressDataSource.cs  # v0.6.0 PostgreSQL（EF Core）からの読み込み
 │   └── PostkunPostalCodeService.cs  # ポストくん API 通信
 ├── Infrastructure/
-│   └── DatabaseMigrator.cs      # v0.6 DbUp によるマイグレーション実行
+│   ├── DatabaseMigrator.cs      # v0.6 DbUp によるマイグレーション実行
+│   └── Database/                # v0.6.0 EF Core の DbContext とエンティティ
 ├── db/
-│   ├── migration/               # v0.6 V001～V003 の SQL（アセンブリに埋め込み）
+│   ├── migration/               # v0.6 V001～V004 の SQL（アセンブリに埋め込み）
 │   └── setup/create_database.sql  # v0.6 開発用 DB・ロールの作成（手動・初回のみ）
 ├── Data/
 │   ├── Municipalities.json      # v0.5 大阪府43市町村の一覧（郡・コード・行政区）
@@ -422,8 +483,13 @@ v0.6.0-alpha.1 では、生成側の環境で **PostgreSQL 16 に V001～V003 �
 - DbUp による初回マイグレーション：oamvc に適用 3 件、2回目 0 件。統合テスト（oamvc_test）成功：市町村43・町名580・丁目1,815
 - 実行日・環境：2026-10-29、Windows / .NET 10 SDK（10.0.14）/ PostgreSQL 16（compose.yaml）
 
+v0.6.0 では、生成側の環境で PostgreSQL 16 に V001～V004 を適用し、`DatabaseAddressDataSource` と同じ手順（並び順・グループ化）で DB から組み立てたデータが、元の JSON（市町村一覧・24区・580町名・1,815丁目）と完全に一致することを確認しました。**C# のビルド、`dotnet test`、EF Core 経由での実行は未実施**のため、ローカル環境で実行して結果を次に記入してください。
+
+- ローカルでの `dotnet test` 結果（v0.6.0）：（例：合計 67 件、成功 64、スキップ 3〔DB を使う統合テスト〕、失敗 0）
+- DB と JSON の一致テスト（`DatabaseAddressDataSourceTests`）：（例：成功）
+- `AddressData:Source = Database` での起動：（例：「住所データの読み込み元：PostgreSQL」と表示され、画面が JSON のときと同じ結果になる）
+
 ## 次の段階（未着手）
 
 - **大阪市外の町名データの収録**：日本郵便の「住所の郵便番号（大阪府分 CSV）」などから町域名を取り込めば、堺市・その他の市町村でも町名を一覧から選べるようになります（CSV の町域は丁目単位でないなど表記の癖があるため、変換処理の検討が必要）。
-- **v0.6 の次の段階**：データの読み込み元をインターフェースで抽象化し（JSON 実装と DB 実装を設定で切り替え）、EF Core（Npgsql）で DB から読み込む。単体テストは JSON 実装のまま DB なしで実行できるようにする。
 - **v0.7**：住所を正規化する Web API と OpenAPI。同じ API を Spring Boot でも作り、同じ DB を共有して比較する。

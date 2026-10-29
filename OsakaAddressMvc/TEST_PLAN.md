@@ -1,4 +1,4 @@
-# Osaka Address MVC v0.6.0-alpha.1 テスト計画（日本語）
+# Osaka Address MVC v0.6.0 テスト計画（日本語）
 
 > v0.5 で大阪府全域に対象を拡張しました。A～F は v0.4 までの確認項目（大阪市の区は `大阪市○○区` として表示されます）、**G が v0.5 の追加項目**です。
 
@@ -224,4 +224,39 @@ Remove-Item Env:OSAKA_MIGRATION_TEST_DB
 | 55 | 接続文字列のパスワードを誤った値にして `dotnet run` | 起動時に例外で中止される（確認後は元に戻す） |
 | 56 | `psql` で `INSERT INTO municipalities VALUES ('99999','テスト市','Test','市','三島郡',false,99);` | CHECK 制約違反で拒否される（市には郡名を付けられない） |
 | 57 | 画面での住所検索・郵便番号検索（No.23～50） | v0.5.5 と同じ結果になる（画面はまだ JSON を使用） |
+
+## J. v0.6.0 データ元の抽象化と EF Core のテスト
+
+### J-1. 自動テスト（xUnit・DB 不要）
+
+| テスト | 内容 |
+| --- | --- |
+| `正しいデータなら72地域を作成する` | JSON のデータ元で72地域が作られる |
+| `市町村が43件でなければ例外になる` | 偽のデータ元（市町村を1件削除）で、起動時検証が例外を出す |
+| `大阪市の区データが24区でなければ例外になる` | 偽のデータ元（区を1件削除）で例外 |
+| `区名が重複していれば例外になりデータ元の名前を表示する` | 区の重複を検出し、メッセージにデータ元の名前が入る |
+| `マイグレーションスクリプトは3桁の連番で埋め込まれている` | V004 を含めて欠番なし |
+
+通常の `dotnet test` では、DB を使う3件（疎通確認・マイグレーション統合テスト・DB と JSON の一致テスト）がスキップされます。
+
+### J-2. DB と JSON の一致テスト（手動）
+
+```powershell
+$env:OSAKA_MIGRATION_TEST_DB = "Host=localhost;Port=5434;Database=oamvc_test;Username=oamvc_user;Password=..."
+dotnet test --filter "Category=Integration&FullyQualifiedName~OsakaAddressMvc.Tests.Database" --logger "console;verbosity=detailed"
+Remove-Item Env:OSAKA_MIGRATION_TEST_DB
+```
+
+`DatabaseMigrationTests`（V004 が追加で適用される）と `DatabaseAddressDataSourceTests`（72地域・市町村一覧・24区の町名と丁目が JSON と一致）が成功すること。
+
+### J-3. 画面での確認（ローカル）
+
+| No. | 操作 | 期待結果 |
+| --- | --- | --- |
+| 58 | User Secrets を変更せずに `dotnet run` | ログに「住所データの読み込み元：JSON (...)」。v0.6.0-alpha.2 と同じ動作 |
+| 59 | `dotnet user-secrets set "AddressData:Source" "Database"` のあと `dotnet run` | DbUp が V004 を適用（「今回適用したスクリプト 1 件」）し、「住所データの読み込み元：PostgreSQL」と表示される |
+| 60 | No.59 の状態で画面を操作（No.23～50） | JSON のときと同じ結果になる |
+| 61 | No.59 の起動ログ | EF Core が実行した `SELECT ... FROM municipalities` などの SQL が表示される |
+| 62 | `ConnectionStrings:OAMVC` を削除し、`AddressData:Source` を `Database` のまま `dotnet run` | 「接続文字列 ConnectionStrings:OAMVC を設定してください」の例外で起動を中止する |
+| 63 | 確認後に `dotnet user-secrets remove "AddressData:Source"` | JSON に戻る |
 

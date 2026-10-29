@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.6.0-alpha.1</Version>
+    <Version>0.6.0</Version>
     <!-- v0.6: 開発用の接続文字列を User Secrets（dotnet user-secrets set ...）に保存するための ID -->
     <UserSecretsId>osaka-address-mvc-d29d6bad</UserSecretsId>
   </PropertyGroup>
@@ -20,6 +20,10 @@
   <!-- v0.6: DB マイグレーション（DbUp）。db/migration/*.sql をアセンブリに埋め込み、起動時に実行する -->
   <ItemGroup>
     <PackageReference Include="dbup-postgresql" Version="7.0.1" />
+  </ItemGroup>
+  <!-- v0.6.0: EF Core（PostgreSQL）で DB から住所データを読み込む -->
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="db/migration/*.sql" />
