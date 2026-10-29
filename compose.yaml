@@ -1,0 +1,21 @@
+﻿# OsakaAddressMvc 専用の PostgreSQL（開発用）
+services:
+  db:
+    image: postgres:16                      # 手元にある既存のイメージを再利用
+    container_name: oamvc-postgres
+    environment:
+      POSTGRES_USER: oamvc_user
+      POSTGRES_PASSWORD: ${OAMVC_DB_PASSWORD}   # .env から読み込む
+      POSTGRES_DB: oamvc
+    ports:
+      - "5434:5432"
+    volumes:
+      - oamvc-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oamvc_user -d oamvc"]
+      interval: 5s
+      retries: 10
+      
+volumes:
+  oamvc-pgdata:

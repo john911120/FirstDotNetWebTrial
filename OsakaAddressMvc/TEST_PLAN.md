@@ -1,4 +1,4 @@
-# Osaka Address MVC v0.5.5 テスト計画（日本語）
+# Osaka Address MVC v0.6.0-alpha.1 テスト計画（日本語）
 
 > v0.5 で大阪府全域に対象を拡張しました。A～F は v0.4 までの確認項目（大阪市の区は `大阪市○○区` として表示されます）、**G が v0.5 の追加項目**です。
 
@@ -190,4 +190,38 @@ Remove-Item Env:OSAKA_TEST_DB
 | 48 | `ASPNETCORE_ENVIRONMENT=Production` で起動し、存在しない処理でエラーを発生させる、または `/Error` を開く | 日本語のエラー画面（ErrorController）が表示される |
 | 49 | `appsettings.json` の `PostalCodeApi:TimeoutSeconds` を `0` にして `dotnet run` | 起動時に検証エラーで中止される（確認後は `8` に戻す） |
 | 50 | `appsettings.json` の `AddressData:DataDirectory` を存在しないフォルダーにして `dotnet run` | 起動時に例外で中止される（確認後は `Data` に戻す） |
+
+## I. v0.6.0-alpha.1 DB マイグレーション（DbUp）のテスト
+
+### I-1. 自動テスト（xUnit・DB 不要）
+
+| テスト | 内容 |
+| --- | --- |
+| `マイグレーションスクリプトは3桁の連番で埋め込まれている` | `db/migration/*.sql` がアセンブリに埋め込まれ、`V001` から欠番なく並ぶ |
+| `シードデータの件数はJSONデータと一致する` | V002・V003 の件数（43・31・580・1,815）が `Data/` の JSON と一致する |
+
+通常の `dotnet test` では、DB を使う2件（疎通確認・マイグレーション統合テスト）がスキップされます。
+
+### I-2. マイグレーション統合テスト（手動）
+
+**テスト専用の空の DB** を用意して実行します（他のプロジェクトの DB は指定しないこと）。
+
+```powershell
+psql -h localhost -p 5433 -U postgres -c "CREATE DATABASE oamvc_test OWNER oamvc_user ENCODING 'UTF8'"
+$env:OSAKA_MIGRATION_TEST_DB = "Host=localhost;Port=5433;Database=oamvc_test;Username=oamvc_user;Password=..."
+dotnet test --filter "FullyQualifiedName~DatabaseMigrationTests" --logger "console;verbosity=detailed"
+Remove-Item Env:OSAKA_MIGRATION_TEST_DB
+```
+
+### I-3. アプリ起動時の確認（ローカル）
+
+| No. | 操作 | 期待結果 |
+| --- | --- | --- |
+| 51 | User Secrets を設定せずに `dotnet run` | 「接続文字列 ConnectionStrings:OAMVC が未設定のため、DB マイグレーションをスキップしました。」の警告が出て、従来どおり起動する |
+| 52 | `db/setup/create_database.sql` で DB を作成し、User Secrets に接続文字列を設定して `dotnet run` | 「DB マイグレーション完了：今回適用したスクリプト 3 件。」と表示される |
+| 53 | もう一度 `dotnet run` | 「今回適用したスクリプト 0 件」と表示される（再実行されない） |
+| 54 | `psql` で `SELECT count(*) FROM municipalities;`・`towns`・`chomes`・`schemaversions` | 43・580・1815・3 |
+| 55 | 接続文字列のパスワードを誤った値にして `dotnet run` | 起動時に例外で中止される（確認後は元に戻す） |
+| 56 | `psql` で `INSERT INTO municipalities VALUES ('99999','テスト市','Test','市','三島郡',false,99);` | CHECK 制約違反で拒否される（市には郡名を付けられない） |
+| 57 | 画面での住所検索・郵便番号検索（No.23～50） | v0.5.5 と同じ結果になる（画面はまだ JSON を使用） |
 

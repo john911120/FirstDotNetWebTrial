@@ -1,11 +1,12 @@
-# Osaka Address MVC（学習用 v0.5.5）
+# Osaka Address MVC（学習用 v0.6.0-alpha.1）
 
-ASP.NET Core MVC / C# 14 / .NET 10 の練習用プロジェクトです。**大阪府の43市町村（33市・9町・1村）** を対象に、地域（大阪市24区・堺市7区・その他の市町村）を選び、**町名・丁目（ある場合）・番・号** を指定して住所を組み立て、検索結果やデータ一式を JSON ファイルとしてダウンロードできます。Rider、Visual Studio、VS Code のいずれでも編集できます。アプリ本体には **PostgreSQL、EF Core、Docker は未導入**です（テストプロジェクトに DB 疎通確認用のテストのみあります）。
+ASP.NET Core MVC / C# 14 / .NET 10 の練習用プロジェクトです。**大阪府の43市町村（33市・9町・1村）** を対象に、地域（大阪市24区・堺市7区・その他の市町村）を選び、**町名・丁目（ある場合）・番・号** を指定して住所を組み立て、検索結果やデータ一式を JSON ファイルとしてダウンロードできます。Rider、Visual Studio、VS Code のいずれでも編集できます。v0.6.0-alpha.1 で **DbUp による PostgreSQL へのマイグレーション**を追加しました（画面は引き続き JSON を使用。EF Core・Docker は未導入）。
 
 - v0.3：ポストくん公開 API による郵便番号検索を別 URL に追加（APIキー不要。既存の住所検索は外部API障害の影響を受けません）。
 - v0.4：起動時のデータ検証、`JsonSerializerOptions` の再利用、xUnit による自動テストを追加。
 - v0.5：対象を大阪市から大阪府全域へ拡張（詳細は「v0.5 の更新内容」）。
-- **v0.5.5：機能は変えずに整理・テスト強化**（設定の外部化、ポストくん API のテスト、DB 接続テストの安全化。詳細は「v0.5.5 の更新内容」）。
+- v0.5.5：機能は変えずに整理・テスト強化（設定の外部化、ポストくん API のテスト、DB 接続テストの安全化。詳細は「v0.5.5 の更新内容」）。
+- **v0.6.0-alpha.1：DbUp で住所データを PostgreSQL に登録**（テーブル作成・初期データ・起動時マイグレーション。詳細は「v0.6.0-alpha.1 の更新内容」）。
 
 ## v0.1 の概要
 
@@ -211,6 +212,65 @@ git commit -m "v0.5.5: 整理・テスト強化"
 
 - 本体とテストは同じコミットで管理してください。旧バージョンのテストを新しいバージョンに上書きすると、v0.5 作成時のように API の不一致でビルドが失敗します。
 
+## v0.6.0-alpha.1 の更新内容（DB マイグレーション：DbUp）
+
+**目的：v0.6 の第1段階として、住所データを PostgreSQL に登録する仕組みを作る。** 画面は引き続き JSON のデータを使います（DB からの読み込みは次の段階）。DB を用意しなくても、従来どおり JSON だけで動作します。
+
+### 1. なぜ Flyway ではなく DbUp か
+
+Java（Spring Boot）では `flyway-core` を依存関係に追加するだけで、起動時に自動でマイグレーションが実行されます。一方 .NET では Flyway はビルド・実行の流れの外にある Java 製ツールのため、CLI や Docker イメージの管理、JDBC 形式の接続文字列が別途必要になります。そこで、**NuGet パッケージ1つで同じ考え方（SQL ファイルによるスキーマ履歴管理）を実現できる DbUp** を採用しました。
+
+- パッケージ：`dbup-postgresql` 7.0.1（`dbup-core` と `Npgsql` は推移的に追加される）
+- スクリプトの命名は Flyway と同じ `V{番号}__{説明}.sql`。将来 Flyway に移行しても SQL はそのまま使えます。
+- **番号は3桁でゼロ埋め**します（`V001`）。DbUp はファイル名の文字列順で実行するため、`V10` が `V2` より先に実行されるのを防ぎます。
+- 適用済みのスクリプトは DB の `schemaversions` テーブルに記録され、再実行されません（Flyway の `flyway_schema_history` に相当）。
+
+### 2. テーブルと初期データ
+
+| スクリプト | 内容 |
+| --- | --- |
+| `db/migration/V001__create_tables.sql` | `municipalities`（43市町村）・`wards`（大阪市24区・堺市7区）・`towns`（大阪市の町名）・`chomes`（丁目）を作成。主キー・外部キー・一意制約・CHECK 制約（郡名は町村のみ、など）でデータの整合性を DB 側でも保証 |
+| `db/migration/V002__seed_municipalities_and_wards.sql` | 市町村43件・行政区31件（`Data/Municipalities.json` から生成） |
+| `db/migration/V003__seed_osaka_city_towns.sql` | 大阪市24区の町名580件・丁目1,815件（`Data/Wards/` から生成） |
+
+- スクリプトは `csproj` の `EmbeddedResource` でアセンブリに埋め込むため、出力先へのコピー漏れ（v0.5.5 で起きた `bin/` の問題）が起きません。
+- PostgreSQL は引用符なしの名前を小文字に変換するため、DB 名・テーブル名・列名はすべて小文字（`snake_case`）にしています。
+- 初期データは v0.5.5 の JSON から一度だけ生成したものです。**適用済みのスクリプトは書き換えず**、データを変更する場合は `V004__...sql` のように新しいスクリプトを追加します。
+
+### 3. 起動時のマイグレーション
+
+`Program.cs` で、アプリ起動時（`Database:MigrateOnStartup` が `true` の場合）に `Infrastructure/DatabaseMigrator.cs` を呼び出します。v0.4 の「起動時のデータ検証」と同じく、**失敗した場合は起動を中止**します。
+
+| 設定 | appsettings.json | appsettings.Development.json |
+| --- | --- | --- |
+| `Database:MigrateOnStartup` | `false` | `true` |
+| `ConnectionStrings:OAMVC` | 空（未設定） | ― （User Secrets で設定） |
+
+接続文字列が未設定の場合は警告をログに出してマイグレーションをスキップし、従来どおり JSON で起動します。
+
+### 4. 開発環境での準備
+
+1. 既存の PostgreSQL に専用のロールと DB を作成します（初回のみ）。新しいコンテナーは不要です。パスワードは実行前に書き換えてください。
+
+   ```powershell
+   psql -h localhost -p 5433 -U postgres -f OsakaAddressMvc/db/setup/create_database.sql
+   ```
+
+2. 接続文字列を **User Secrets** に保存します（プロジェクトの外に保存されるため Git に含まれません。`csproj` に `UserSecretsId` を設定済み）。
+
+   ```powershell
+   cd OsakaAddressMvc
+   dotnet user-secrets set "ConnectionStrings:OAMVC" "Host=localhost;Port=5433;Database=oamvc;Username=oamvc_user;Password=..."
+   ```
+
+3. `dotnet run` で起動すると、ログに `DB マイグレーション完了：今回適用したスクリプト 3 件。` と表示されます。2回目以降の起動では `0 件` になります。
+
+### 5. テスト
+
+- `MigrationScriptTests`（DB 不要）：スクリプトが3桁の連番で埋め込まれていること、シードの件数（43・31・580・1,815）が JSON と一致することを確認します。
+- `DatabaseMigrationTests`（手動実行）：環境変数 `OSAKA_MIGRATION_TEST_DB` を設定したときだけ、実際の DB にマイグレーションを2回適用し、全データが登録されること・2回目は何も実行されないことを確認します。**必ずテスト専用の空の DB を指定してください。**
+- `[DatabaseFact]` は環境変数名を指定できるようにしました（`[DatabaseFact(DatabaseFactAttribute.MigrationEnvironmentVariable)]`）。
+
 ## ディレクトリ構成
 
 ```text
@@ -230,6 +290,11 @@ OsakaAddressMvc/
 │   ├── AddressService.cs        # LINQ、住所選択・組み立て、出力オブジェクト生成
 │   ├── AddressDataProvider.cs   # 市町村一覧と区ごとの JSON の読み込み・起動時検証
 │   └── PostkunPostalCodeService.cs  # ポストくん API 通信
+├── Infrastructure/
+│   └── DatabaseMigrator.cs      # v0.6 DbUp によるマイグレーション実行
+├── db/
+│   ├── migration/               # v0.6 V001～V003 の SQL（アセンブリに埋め込み）
+│   └── setup/create_database.sql  # v0.6 開発用 DB・ロールの作成（手動・初回のみ）
 ├── Data/
 │   ├── Municipalities.json      # v0.5 大阪府43市町村の一覧（郡・コード・行政区）
 │   └── Wards/                   # 大阪市の区ごとの24ファイル（大阪市中央区.json など）
@@ -243,9 +308,9 @@ OsakaAddressMvc/
 │   ├── css/address.css          # Bootstrap の色変数を使用
 │   ├── js/site.js               # 追加ライブラリを使わない JavaScript
 │   └── lib/bootstrap/          # Bootstrap 5.3
-├── AppInfo.cs                   # バージョン表記（0.5.5）
+├── AppInfo.cs                   # バージョン表記（0.6.0-alpha.1）
 ├── Program.cs                   # DI・Options・MVC ルーティング
-├── appsettings.json             # v0.5.5 住所データの場所・郵便番号 API の設定
+├── appsettings.json             # 住所データの場所・郵便番号 API・DB マイグレーションの設定
 └── TEST_PLAN.md                 # 手動確認の手順
 ```
 
@@ -351,7 +416,14 @@ v0.5.5 では、生成側の環境で参照の整合性（削除したクラス�
 - ローカルでの `dotnet test` 結果（v0.5.5）：合計 59 件、成功 58、スキップ 1（DB 接続テスト）、失敗 0
 - 実行日・環境：2026-10-21、Windows / .NET 10 SDK（10.0.13）
 
+v0.6.0-alpha.1 では、生成側の環境で **PostgreSQL 16 に V001～V003 を実際に適用**し、件数（市町村43・行政区31・町名580・丁目1,815）と、CHECK 制約・外部キー制約が不正なデータを拒否することを確認しました。**生成側の環境には .NET 10 SDK がないため、C# のビルドと `dotnet test`、DbUp 経由での実行は未実施**です。ローカル環境で実行し、結果を次に記入してください。
+
+- ローカルでの `dotnet test` 結果（v0.6.0-alpha.1）：合計 62 件、成功 60、スキップ 2（DB 接続テスト・マイグレーション統合テスト）、失敗 0
+- DbUp による初回マイグレーション：oamvc に適用 3 件、2回目 0 件。統合テスト（oamvc_test）成功：市町村43・町名580・丁目1,815
+- 実行日・環境：2026-10-29、Windows / .NET 10 SDK（10.0.14）/ PostgreSQL 16（compose.yaml）
+
 ## 次の段階（未着手）
 
 - **大阪市外の町名データの収録**：日本郵便の「住所の郵便番号（大阪府分 CSV）」などから町域名を取り込めば、堺市・その他の市町村でも町名を一覧から選べるようになります（CSV の町域は丁目単位でないなど表記の癖があるため、変換処理の検討が必要）。
-- ASP.NET Core MVC の動作とファイル管理に慣れた後で、町名更新作業の手間を評価し、住所 API の比較やデータソース抽象化、必要に応じて EF Core / PostgreSQL 導入を検討します。現段階では不要な依存を増やしません。
+- **v0.6 の次の段階**：データの読み込み元をインターフェースで抽象化し（JSON 実装と DB 実装を設定で切り替え）、EF Core（Npgsql）で DB から読み込む。単体テストは JSON 実装のまま DB なしで実行できるようにする。
+- **v0.7**：住所を正規化する Web API と OpenAPI。同じ API を Spring Boot でも作り、同じ DB を共有して比較する。

@@ -19,3 +19,15 @@ public sealed class PostalCodeApiOptions
     public string BaseAddress { get; set; } = "https://postcode.teraren.com/";
     public int TimeoutSeconds { get; set; } = 8;
 }
+
+// v0.6: DB マイグレーション（DbUp）の設定。appsettings.json の "Database" セクション。
+// 接続文字列は ConnectionStrings:OAMVC から読み込む（開発中は User Secrets に保存し、Git に含めない）。
+public sealed class DatabaseOptions
+{
+    public const string SectionName = "Database";
+    public const string ConnectionStringName = "OAMVC";
+
+    // true の場合、アプリ起動時に db/migration/ の未適用スクリプトを実行する。
+    // 接続文字列が未設定のときは警告を出してスキップする（DB なしでも従来どおり JSON で動作する）。
+    public bool MigrateOnStartup { get; set; }
+}

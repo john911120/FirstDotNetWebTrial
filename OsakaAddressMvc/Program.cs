@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using OsakaAddressMvc;
+using OsakaAddressMvc.Infrastructure;
 using OsakaAddressMvc.Models;
 using OsakaAddressMvc.Services;
 
@@ -17,6 +18,9 @@ builder.Services.AddOptions<AddressDataOptions>()
     });
 builder.Services.AddSingleton<AddressDataProvider>();
 builder.Services.AddSingleton<AddressService>();
+
+// v0.6: DB マイグレーション（DbUp）の設定。接続文字列は ConnectionStrings:OAMVC（開発中は User Secrets）。
+builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection(DatabaseOptions.SectionName));
 
 // 外部APIに依存するのは郵便番号検索のみとし、既存の住所検索は外部APIなしで動作させる。
 // v0.5.5: 接続先とタイムアウトを appsettings.json（PostalCodeApi）から読み込み、起動時に値を検証する。
@@ -42,6 +46,10 @@ var app = builder.Build();
 // データに不備があれば、この時点で起動を中止する。
 app.Services.GetRequiredService<AddressDataProvider>();
 
+// v0.6: 起動時に DB マイグレーションを実行する（Database:MigrateOnStartup が true の場合）。
+// 失敗した場合は起動を中止する。接続文字列が未設定なら警告のみ出し、DB なしで起動を続ける。
+RunDatabaseMigration(app);
+
 if (!app.Environment.IsDevelopment())
 {
     // v0.5.5: HomeController の削除に伴い、エラー画面は ErrorController（/Error）に移した。
@@ -56,3 +64,27 @@ app.MapStaticAssets();
 app.MapControllerRoute(name: "default", pattern: "{controller=Address}/{action=Index}/{id?}")
    .WithStaticAssets();
 app.Run();
+
+// ---- 起動時の処理 ----
+
+static void RunDatabaseMigration(WebApplication app)
+{
+    var options = app.Services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+    if (!options.MigrateOnStartup) return;
+
+    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("OsakaAddressMvc.DatabaseMigrator");
+    var connectionString = app.Configuration.GetConnectionString(DatabaseOptions.ConnectionStringName);
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        logger.LogWarning("接続文字列 ConnectionStrings:{Name} が未設定のため、DB マイグレーションをスキップしました。",
+            DatabaseOptions.ConnectionStringName);
+        return;
+    }
+
+    var result = DatabaseMigrator.Migrate(connectionString, logger);
+    if (!result.Successful)
+        throw new InvalidOperationException(
+            $"DB マイグレーションに失敗しました（{result.ErrorScript?.Name ?? "不明なスクリプト"}）。", result.Error);
+
+    logger.LogInformation("DB マイグレーション完了：今回適用したスクリプト {Count} 件。", result.Scripts.Count());
+}
