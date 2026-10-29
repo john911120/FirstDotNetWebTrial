@@ -10,7 +10,7 @@ namespace OsakaAddressMvc.Tests;
 //
 // 通常の dotnet test では実行されない（[DatabaseFact] により、環境変数が未設定ならスキップ）。
 // 実行方法（PowerShell・ソリューションのフォルダーで実行）：
-//   $env:OSAKA_TEST_DB = "Host=localhost;Port=5432;Database=...;Username=...;Password=..."
+//   $env:OSAKA_TEST_DB = "Host=localhost;Port=5434;Database=oamvc;Username=oamvc_user;Password=..."
 //   dotnet test --filter "Category=Integration" --logger "console;verbosity=detailed"
 //   Remove-Item Env:OSAKA_TEST_DB
 //
@@ -24,7 +24,7 @@ namespace OsakaAddressMvc.Tests;
 // [PostgreSQL]  ← 現在のコード
 //   dotnet add OsakaAddressMvc.Tests package Npgsql
 //   using Npgsql;  /  NpgsqlConnection, NpgsqlCommand
-//   接続文字列：Host=localhost;Port=5432;Database=osaka;Username=postgres;Password=...
+//   接続文字列：Host=localhost;Port=5434;Database=oamvc;Username=oamvc_user;Password=...（compose.yaml の DB）
 //   確認 SQL ：SELECT current_database(), current_user, version()
 //
 // [SQL Server]

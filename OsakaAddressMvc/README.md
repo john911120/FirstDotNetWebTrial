@@ -252,17 +252,23 @@ Java（Spring Boot）では `flyway-core` を依存関係に追加するだけ�
 
 ### 4. 開発環境での準備
 
-1. 既存の PostgreSQL に専用のロールと DB を作成します（初回のみ）。新しいコンテナーは不要です。パスワードは実行前に書き換えてください。
+1. ソリューションのルートにある `compose.yaml` で、このアプリ専用の PostgreSQL 16 を起動します（初回のみ準備が必要）。
+
+   - ルートに `.env` を作成し、`OAMVC_DB_PASSWORD=任意のパスワード` と書きます（`.gitignore` 済みで Git には含まれません）。
+   - `docker compose up -d` で起動します。ホストのポートは `5434`、DB `oamvc` とユーザー `oamvc_user`（DB の所有者）はコンテナーの初回起動時に作成されます。
 
    ```powershell
-   psql -h localhost -p 5433 -U postgres -f OsakaAddressMvc/db/setup/create_database.sql
+   docker compose up -d
+   docker compose ps          # STATUS が healthy になれば準備完了
    ```
+
+   Docker を使わず既存の PostgreSQL に作る場合は、`db/setup/create_database.sql` のパスワードを書き換えてから管理者ユーザーで実行します。その場合、以降のポート番号はその PostgreSQL のものに読み替えてください。
 
 2. 接続文字列を **User Secrets** に保存します（プロジェクトの外に保存されるため Git に含まれません。`csproj` に `UserSecretsId` を設定済み）。
 
    ```powershell
    cd OsakaAddressMvc
-   dotnet user-secrets set "ConnectionStrings:OAMVC" "Host=localhost;Port=5433;Database=oamvc;Username=oamvc_user;Password=..."
+   dotnet user-secrets set "ConnectionStrings:OAMVC" "Host=localhost;Port=5434;Database=oamvc;Username=oamvc_user;Password=..."
    ```
 
 3. `dotnet run` で起動すると、ログに `DB マイグレーション完了：今回適用したスクリプト 3 件。` と表示されます。2回目以降の起動では `0 件` になります。
@@ -355,7 +361,7 @@ OsakaAddressMvc/
 │   └── Database/                # v0.6.0 EF Core の DbContext とエンティティ
 ├── db/
 │   ├── migration/               # v0.6 V001～V004 の SQL（アセンブリに埋め込み）
-│   └── setup/create_database.sql  # v0.6 開発用 DB・ロールの作成（手動・初回のみ）
+│   └── setup/create_database.sql  # v0.6 既存の PostgreSQL に DB・ロールを作る場合のスクリプト（compose.yaml なら不要）
 ├── Data/
 │   ├── Municipalities.json      # v0.5 大阪府43市町村の一覧（郡・コード・行政区）
 │   └── Wards/                   # 大阪市の区ごとの24ファイル（大阪市中央区.json など）

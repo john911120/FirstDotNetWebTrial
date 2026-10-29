@@ -13,7 +13,7 @@ namespace OsakaAddressMvc.Tests;
 //    他のプロジェクトの DB を指定すると、そこに municipalities などのテーブルが作られてしまう。
 //
 // 実行方法（PowerShell）：
-//   $env:OSAKA_MIGRATION_TEST_DB = "Host=localhost;Port=5433;Database=oamvc_test;Username=oamvc_user;Password=..."
+//   $env:OSAKA_MIGRATION_TEST_DB = "Host=localhost;Port=5434;Database=oamvc_test;Username=oamvc_user;Password=..."
 //   dotnet test --filter "FullyQualifiedName~DatabaseMigrationTests" --logger "console;verbosity=detailed"
 //   Remove-Item Env:OSAKA_MIGRATION_TEST_DB
 // ============================================================================

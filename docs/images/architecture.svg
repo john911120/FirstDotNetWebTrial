@@ -1,12 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="t d">
-  <title id="t">OsakaAddressMvc の構成図</title>
-  <desc id="d">ブラウザーからのリクエストが Controller、Service、AddressDataProvider を経て JSON データに届き、郵便番号検索だけが外部のポストくん API を呼び出す構成。設定は appsettings.json から Options として注入し、xUnit のテストが Service を直接検証する。</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 712" width="1040" height="712" role="img" aria-labelledby="t d">
+  <title id="t">OsakaAddressMvc の構成図（v0.6.0）</title>
+  <desc id="d">ブラウザーからのリクエストが Controller、Service、AddressDataProvider を経て、IAddressDataSource の実装（JSON または EF Core で PostgreSQL）からデータを受け取る構成。読み込み元は設定 AddressData:Source で切り替える。PostgreSQL のテーブルと初期データは起動時に DbUp が作成する。郵便番号検索だけが外部のポストくん API を呼び出し、xUnit のテストが Service と DB を検証する。</desc>
   <style>
     text { font-family: "Noto Sans JP", "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif; fill: #1f2328; }
     .h { font-size: 20px; font-weight: 700; }
     .label { font-size: 15px; font-weight: 700; }
     .sub { font-size: 12.5px; fill: #59636e; }
     .tag { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; }
+    .new { font-size: 11px; font-weight: 700; fill: #ffffff; }
     .box { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.5; }
     .arrow { stroke: #59636e; stroke-width: 1.8; fill: none; marker-end: url(#ah); }
     .dash { stroke-dasharray: 6 5; }
@@ -17,69 +18,113 @@
     </marker>
   </defs>
 
-  <rect x="0" y="0" width="960" height="560" rx="18" fill="#f6f8fa"/>
-  <text x="32" y="44" class="h">OsakaAddressMvc の構成（v0.5.5）</text>
-  <text x="32" y="68" class="sub">Controller → Service → データ の3層。外部 API に依存するのは郵便番号検索だけ。</text>
+  <rect x="0" y="0" width="1040" height="712" rx="18" fill="#f6f8fa"/>
+  <text x="32" y="44" class="h">OsakaAddressMvc の構成（v0.6.0）</text>
+  <text x="32" y="68" class="sub">Controller → Service → データ の3層。データの読み込み元は設定ひとつで JSON と PostgreSQL を切り替える。</text>
+  <rect x="842" y="30" width="44" height="20" rx="10" fill="#8250df"/>
+  <text x="864" y="44" text-anchor="middle" class="new">v0.6</text>
+  <text x="894" y="44" class="sub">で追加</text>
 
   <!-- Browser -->
-  <rect x="32" y="110" width="150" height="86" rx="12" class="box"/>
-  <text x="107" y="146" text-anchor="middle" class="label">ブラウザー</text>
-  <text x="107" y="168" text-anchor="middle" class="sub">Razor で生成した</text>
-  <text x="107" y="184" text-anchor="middle" class="sub">HTML を表示</text>
+  <rect x="32" y="113" width="130" height="86" rx="12" class="box"/>
+  <text x="97" y="149" text-anchor="middle" class="label">ブラウザー</text>
+  <text x="97" y="171" text-anchor="middle" class="sub">Razor で生成した</text>
+  <text x="97" y="187" text-anchor="middle" class="sub">HTML を表示</text>
 
   <!-- Controllers -->
-  <rect x="232" y="96" width="210" height="160" rx="12" class="box" style="stroke:#0969da"/>
-  <text x="248" y="120" class="tag" fill="#0969da" style="fill:#0969da">CONTROLLERS</text>
-  <text x="248" y="148" class="label">AddressController</text>
-  <text x="248" y="166" class="sub">住所の組み立て・JSON 出力</text>
-  <text x="248" y="194" class="label">PostalCodeController</text>
-  <text x="248" y="212" class="sub">郵便番号検索（POST）</text>
-  <text x="248" y="240" class="label">ErrorController</text>
+  <rect x="190" y="96" width="196" height="120" rx="12" class="box" style="stroke:#0969da"/>
+  <text x="206" y="120" class="tag" style="fill:#0969da">CONTROLLERS</text>
+  <text x="206" y="146" class="label">AddressController</text>
+  <text x="206" y="164" class="sub">住所の組み立て・JSON 出力</text>
+  <text x="206" y="190" class="label">PostalCodeController</text>
+  <text x="206" y="207" class="sub">郵便番号検索（POST）</text>
 
   <!-- Services -->
-  <rect x="492" y="96" width="220" height="160" rx="12" class="box" style="stroke:#8250df"/>
-  <text x="508" y="120" class="tag" style="fill:#8250df">SERVICES</text>
-  <text x="508" y="148" class="label">AddressService</text>
-  <text x="508" y="166" class="sub">LINQ で地域・町名を検索</text>
-  <text x="508" y="182" class="sub">入力の正規化と検証</text>
-  <text x="508" y="212" class="label">PostkunPostalCodeService</text>
-  <text x="508" y="230" class="sub">HttpClient・async/await</text>
+  <rect x="414" y="96" width="214" height="120" rx="12" class="box" style="stroke:#8250df"/>
+  <text x="430" y="120" class="tag" style="fill:#8250df">SERVICES</text>
+  <text x="430" y="146" class="label">AddressService</text>
+  <text x="430" y="164" class="sub">LINQ で地域・町名を検索</text>
+  <text x="430" y="190" class="label" style="font-size:14px">PostkunPostalCodeService</text>
+  <text x="430" y="207" class="sub">HttpClient・async/await</text>
 
   <!-- Data provider -->
-  <rect x="762" y="96" width="166" height="96" rx="12" class="box" style="stroke:#1a7f37"/>
-  <text x="778" y="120" class="tag" style="fill:#1a7f37">DATA</text>
-  <text x="778" y="148" class="label">AddressData</text>
-  <text x="778" y="166" class="label">Provider</text>
-  <text x="778" y="184" class="sub">起動時に読込・検証</text>
+  <rect x="656" y="96" width="352" height="96" rx="12" class="box" style="stroke:#1a7f37"/>
+  <text x="672" y="120" class="tag" style="fill:#1a7f37">DATA</text>
+  <text x="672" y="146" class="label">AddressDataProvider</text>
+  <text x="672" y="166" class="sub">起動時に読み込み、件数・重複・整合性を検証する</text>
+  <text x="672" y="182" class="sub">（データ元が JSON でも DB でも同じ検査）</text>
 
-  <rect x="762" y="214" width="166" height="74" rx="12" class="box"/>
-  <text x="778" y="240" class="label">Data/*.json</text>
-  <text x="778" y="259" class="sub">43市町村・72地域</text>
-  <text x="778" y="275" class="sub">大阪市24区・580町名</text>
+  <!-- Interface -->
+  <rect x="656" y="214" width="352" height="84" rx="12" fill="#ffffff" stroke="#1a7f37" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="672" y="238" class="tag" style="fill:#1a7f37">INTERFACE</text>
+  <rect x="948" y="226" width="44" height="20" rx="10" fill="#8250df"/>
+  <text x="970" y="240" text-anchor="middle" class="new">v0.6</text>
+  <text x="672" y="264" class="label">IAddressDataSource</text>
+  <text x="672" y="284" class="sub">AddressData:Source で切り替え（Json ／ Database）</text>
+
+  <!-- Implementations -->
+  <rect x="656" y="340" width="171" height="84" rx="12" class="box" style="stroke:#1a7f37"/>
+  <rect x="771" y="350" width="44" height="20" rx="10" fill="#8250df"/>
+  <text x="793" y="364" text-anchor="middle" class="new">v0.6</text>
+  <text x="672" y="366" class="label">DB 実装</text>
+  <text x="672" y="388" class="sub">DatabaseAddress</text>
+  <text x="672" y="405" class="sub">DataSource（EF Core）</text>
+
+  <rect x="837" y="340" width="171" height="84" rx="12" class="box" style="stroke:#1a7f37"/>
+  <text x="853" y="366" class="label">JSON 実装（既定）</text>
+  <text x="853" y="388" class="sub">JsonAddress</text>
+  <text x="853" y="405" class="sub">DataSource</text>
+
+  <!-- Storage -->
+  <rect x="656" y="460" width="171" height="84" rx="12" fill="#f3f8ff" stroke="#0969da" stroke-width="1.5"/>
+  <rect x="771" y="470" width="44" height="20" rx="10" fill="#8250df"/>
+  <text x="793" y="484" text-anchor="middle" class="new">v0.6</text>
+  <text x="672" y="486" class="label">PostgreSQL</text>
+  <text x="672" y="508" class="sub">16・Docker Compose</text>
+  <text x="672" y="525" class="sub">5テーブル</text>
+
+  <rect x="837" y="460" width="171" height="84" rx="12" class="box"/>
+  <text x="853" y="486" class="label">Data/*.json</text>
+  <text x="853" y="508" class="sub">43市町村・72地域</text>
+  <text x="853" y="525" class="sub">24区・580町名</text>
+
+  <!-- DbUp -->
+  <rect x="414" y="460" width="214" height="84" rx="12" class="box" style="stroke:#0969da"/>
+  <text x="430" y="486" class="label">DbUp</text>
+  <rect x="568" y="470" width="44" height="20" rx="10" fill="#8250df"/>
+  <text x="590" y="484" text-anchor="middle" class="new">v0.6</text>
+  <text x="430" y="508" class="sub">起動時に V001〜V004 を適用</text>
+  <text x="430" y="525" class="sub">未適用のスクリプトだけ実行</text>
 
   <!-- External API -->
-  <rect x="492" y="318" width="220" height="70" rx="12" fill="#fff8f2" stroke="#bc4c00" stroke-width="1.5" stroke-dasharray="6 5"/>
-  <text x="508" y="344" class="tag" style="fill:#bc4c00">EXTERNAL</text>
-  <text x="508" y="370" class="label">ポストくん REST API</text>
+  <rect x="414" y="240" width="214" height="76" rx="12" fill="#fff8f2" stroke="#bc4c00" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="430" y="266" class="tag" style="fill:#bc4c00">EXTERNAL</text>
+  <text x="430" y="292" class="label">ポストくん REST API</text>
 
   <!-- Options -->
-  <rect x="232" y="318" width="210" height="70" rx="12" class="box"/>
-  <text x="248" y="344" class="label">appsettings.json</text>
-  <text x="248" y="364" class="sub">IOptions&lt;T&gt; で DataProvider と</text>
-  <text x="248" y="380" class="sub">HttpClient に注入</text>
+  <rect x="190" y="340" width="196" height="84" rx="12" class="box"/>
+  <text x="206" y="366" class="label">appsettings.json</text>
+  <text x="206" y="388" class="sub">IOptions&lt;T&gt; で注入</text>
+  <text x="206" y="405" class="sub">接続文字列は User Secrets</text>
 
   <!-- Tests -->
-  <rect x="32" y="420" width="896" height="108" rx="12" fill="#ffffff" stroke="#1a7f37" stroke-width="1.5"/>
-  <text x="52" y="448" class="tag" style="fill:#1a7f37">OsakaAddressMvc.Tests（xUnit）</text>
-  <text x="52" y="476" class="label">59 テスト：成功 58・スキップ 1</text>
-  <text x="52" y="500" class="sub">住所の組み立て／地域データ／ポストくん API（偽の HttpMessageHandler で外部接続なし）／DB 疎通確認（環境変数があるときだけ実行）</text>
+  <rect x="32" y="580" width="976" height="104" rx="12" fill="#ffffff" stroke="#1a7f37" stroke-width="1.5"/>
+  <text x="52" y="608" class="tag" style="fill:#1a7f37">OsakaAddressMvc.Tests（xUnit）</text>
+  <text x="52" y="636" class="label">67 テスト：成功 64・スキップ 3</text>
+  <text x="52" y="660" class="sub">住所の組み立て／地域データ／ポストくん API（偽の HttpMessageHandler）／マイグレーションスクリプト／</text>
+  <text x="52" y="676" class="sub">DB 結合テスト（DB と JSON の内容一致・マイグレーションの再実行。環境変数があるときだけ実行し、並列にしない）</text>
 
   <!-- arrows -->
-  <path d="M182 153 H228" class="arrow"/>
-  <path d="M442 176 H488" class="arrow"/>
-  <path d="M712 144 H758" class="arrow"/>
-  <path d="M845 192 V210" class="arrow"/>
-  <path d="M602 256 V314" class="arrow dash"/>
-  <path d="M467 420 V232 H488" class="arrow" style="stroke:#1a7f37;stroke-dasharray:4 4"/>
-  <text x="475" y="410" class="sub" style="fill:#1a7f37">検証</text>
+  <path d="M162 156 H186" class="arrow"/>
+  <path d="M386 156 H410" class="arrow"/>
+  <path d="M628 144 H652" class="arrow"/>
+  <path d="M832 192 V210" class="arrow"/>
+  <path d="M741 298 V336" class="arrow"/>
+  <path d="M922 298 V336" class="arrow"/>
+  <path d="M741 424 V456" class="arrow"/>
+  <path d="M922 424 V456" class="arrow"/>
+  <path d="M628 502 H652" class="arrow"/>
+  <path d="M521 216 V236" class="arrow dash"/>
+  <path d="M400 580 V200 H410" class="arrow" style="stroke:#1a7f37;stroke-dasharray:4 4"/>
+  <text x="394" y="570" text-anchor="end" class="sub" style="fill:#1a7f37">検証</text>
 </svg>

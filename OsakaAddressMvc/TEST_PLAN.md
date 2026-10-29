@@ -167,7 +167,7 @@ dotnet test
 通常の `dotnet test` では実行されません。必要なときだけ、環境変数に接続文字列を設定して実行します（PowerShell）。
 
 ```powershell
-$env:OSAKA_TEST_DB = "Host=localhost;Port=5432;Database=...;Username=...;Password=..."
+$env:OSAKA_TEST_DB = "Host=localhost;Port=5434;Database=oamvc;Username=oamvc_user;Password=..."
 dotnet test --filter "Category=Integration" --logger "console;verbosity=detailed"
 Remove-Item Env:OSAKA_TEST_DB
 ```
@@ -207,8 +207,9 @@ Remove-Item Env:OSAKA_TEST_DB
 **テスト専用の空の DB** を用意して実行します（他のプロジェクトの DB は指定しないこと）。
 
 ```powershell
-psql -h localhost -p 5433 -U postgres -c "CREATE DATABASE oamvc_test OWNER oamvc_user ENCODING 'UTF8'"
-$env:OSAKA_MIGRATION_TEST_DB = "Host=localhost;Port=5433;Database=oamvc_test;Username=oamvc_user;Password=..."
+# テスト用 DB の作成（初回のみ。compose.yaml のコンテナー内の psql を使うため、パスワードは不要）
+docker exec oamvc-postgres psql -U oamvc_user -d oamvc -c "CREATE DATABASE oamvc_test OWNER oamvc_user ENCODING 'UTF8'"
+$env:OSAKA_MIGRATION_TEST_DB = "Host=localhost;Port=5434;Database=oamvc_test;Username=oamvc_user;Password=..."
 dotnet test --filter "FullyQualifiedName~DatabaseMigrationTests" --logger "console;verbosity=detailed"
 Remove-Item Env:OSAKA_MIGRATION_TEST_DB
 ```
@@ -218,7 +219,7 @@ Remove-Item Env:OSAKA_MIGRATION_TEST_DB
 | No. | 操作 | 期待結果 |
 | --- | --- | --- |
 | 51 | User Secrets を設定せずに `dotnet run` | 「接続文字列 ConnectionStrings:OAMVC が未設定のため、DB マイグレーションをスキップしました。」の警告が出て、従来どおり起動する |
-| 52 | `db/setup/create_database.sql` で DB を作成し、User Secrets に接続文字列を設定して `dotnet run` | 「DB マイグレーション完了：今回適用したスクリプト 3 件。」と表示される |
+| 52 | `docker compose up -d` で DB を起動し、User Secrets に接続文字列を設定して `dotnet run` | 「DB マイグレーション完了：今回適用したスクリプト 3 件。」と表示される |
 | 53 | もう一度 `dotnet run` | 「今回適用したスクリプト 0 件」と表示される（再実行されない） |
 | 54 | `psql` で `SELECT count(*) FROM municipalities;`・`towns`・`chomes`・`schemaversions` | 43・580・1815・3 |
 | 55 | 接続文字列のパスワードを誤った値にして `dotnet run` | 起動時に例外で中止される（確認後は元に戻す） |

@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-labelledby="t d">
+  <title id="t">v0.1 から v0.5.5 までの歩み</title>
+  <desc id="d">LINQ の練習として始めた v0.1 から、24区のデータ化、番・号への対応、郵便番号 API、自動テスト、大阪府全域への拡張を経て、v0.5.5 の整理・テスト強化に至るまでのタイムライン。次の目標は v0.6 の EF Core・PostgreSQL・Web API。</desc>
+  <style>
+    text { font-family: "Noto Sans JP", "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif; fill: #1f2328; }
+    .h { font-size: 20px; font-weight: 700; }
+    .v { font-size: 13px; font-weight: 700; fill: #8250df; }
+    .t { font-size: 15px; font-weight: 700; }
+    .s { font-size: 12.5px; fill: #59636e; }
+    .dot { fill: #ffffff; stroke: #8250df; stroke-width: 3; }
+    .stem { stroke: #d0d7de; stroke-width: 1.5; }
+  </style>
+
+  <rect x="0" y="0" width="960" height="400" rx="18" fill="#f6f8fa"/>
+  <text x="32" y="44" class="h">はじめての C# から v0.5.5 まで</text>
+  <text x="32" y="68" class="s">Java（Spring Boot）エンジニアが、ASP.NET Core MVC で一歩ずつ作ってきた記録。</text>
+
+  <!-- timeline axis -->
+  <line x1="70" y1="222" x2="842" y2="222" stroke="#8250df" stroke-width="3"/>
+  <line x1="842" y1="222" x2="918" y2="222" stroke="#8250df" stroke-width="3" stroke-dasharray="6 6"/>
+  <path d="M912 214 L924 222 L912 230 z" fill="#8250df"/>
+
+  <!-- v0.1 (above) -->
+  <line x1="90" y1="122" x2="90" y2="214" class="stem"/>
+  <circle cx="90" cy="222" r="8" class="dot"/>
+  <text x="30" y="102" class="v">v0.1</text>
+  <text x="30" y="122" class="t" dy="-0">LINQ の練習</text>
+  <text x="98" y="160" class="s">Where / Select で</text>
+  <text x="98" y="177" class="s">区名を検索</text>
+
+  <!-- v0.2 (below) -->
+  <line x1="214" y1="230" x2="214" y2="300" class="stem"/>
+  <circle cx="214" cy="222" r="8" class="dot"/>
+  <text x="160" y="276" class="v">v0.2</text>
+  <text x="160" y="296" class="t">24区・580町名</text>
+  <text x="160" y="318" class="s">区ごとの JSON に分離</text>
+  <text x="160" y="335" class="s">jQuery を撤去</text>
+
+  <!-- v0.2.1 (above) -->
+  <line x1="338" y1="130" x2="338" y2="214" class="stem"/>
+  <circle cx="338" cy="222" r="8" class="dot"/>
+  <text x="286" y="102" class="v">v0.2.1</text>
+  <text x="286" y="122" class="t">番・号に対応</text>
+  <text x="346" y="160" class="s">角田町5-15 を</text>
+  <text x="346" y="177" class="s">作れないバグを修正</text>
+
+  <!-- v0.3 (below) -->
+  <line x1="462" y1="230" x2="462" y2="300" class="stem"/>
+  <circle cx="462" cy="222" r="8" class="dot"/>
+  <text x="408" y="276" class="v">v0.3</text>
+  <text x="408" y="296" class="t">郵便番号 API</text>
+  <text x="408" y="318" class="s">HttpClient・async/await</text>
+  <text x="408" y="335" class="s">外部 API 障害を隔離</text>
+
+  <!-- v0.4 (above) -->
+  <line x1="586" y1="130" x2="586" y2="214" class="stem"/>
+  <circle cx="586" cy="222" r="8" class="dot"/>
+  <text x="534" y="102" class="v">v0.4</text>
+  <text x="534" y="122" class="t">テストを書く</text>
+  <text x="594" y="160" class="s">起動時のデータ検証</text>
+  <text x="594" y="177" class="s">xUnit を導入</text>
+
+  <!-- v0.5 (below) -->
+  <line x1="710" y1="230" x2="710" y2="300" class="stem"/>
+  <circle cx="710" cy="222" r="8" class="dot"/>
+  <text x="656" y="276" class="v">v0.5</text>
+  <text x="656" y="296" class="t">大阪府全域へ</text>
+  <text x="656" y="318" class="s">43市町村・72地域</text>
+  <text x="656" y="335" class="s">町名の自由入力</text>
+
+  <!-- v0.5.5 (above, current) -->
+  <rect x="760" y="84" width="168" height="104" rx="12" fill="#ffffff" stroke="#8250df" stroke-width="1.5"/>
+  <line x1="834" y1="188" x2="834" y2="212" class="stem"/>
+  <circle cx="834" cy="222" r="10" fill="#8250df"/>
+  <text x="776" y="108" class="v">v0.5.5（現在）</text>
+  <text x="776" y="130" class="t">整理・テスト強化</text>
+  <text x="776" y="152" class="s">59 テスト・Options</text>
+  <text x="776" y="170" class="s">Git で管理を開始</text>
+
+  <!-- next -->
+  <text x="928" y="276" text-anchor="end" class="v" style="fill:#59636e">次：v0.6</text>
+  <text x="928" y="296" text-anchor="end" class="s">EF Core・PostgreSQL</text>
+  <text x="928" y="313" text-anchor="end" class="s">Flyway・Docker</text>
+  <text x="928" y="330" text-anchor="end" class="s">Web API・OpenAPI</text>
+</svg>
