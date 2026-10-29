@@ -16,6 +16,9 @@ builder.Services.AddOptions<AddressDataOptions>()
         if (!Path.IsPathRooted(options.DataDirectory))
             options.DataDirectory = Path.Combine(builder.Environment.ContentRootPath, options.DataDirectory);
     });
+
+// v0.6.0-alpha.2: 住所データの読み込み元。v0.6.0 で設定により DB（PostgreSQL）に切り替えられるようにする。
+builder.Services.AddSingleton<IAddressDataSource, JsonAddressDataSource>();
 builder.Services.AddSingleton<AddressDataProvider>();
 builder.Services.AddSingleton<AddressService>();
 

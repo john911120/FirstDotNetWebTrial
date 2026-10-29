@@ -1,30 +1,24 @@
-using System.Text.Json;
-using Microsoft.Extensions.Options;
 using OsakaAddressMvc.Models;
 
 namespace OsakaAddressMvc.Services;
 
-// 市町村一覧（Data/Municipalities.json）と大阪市の区別町名データ（Data/Wards/）を起動時に一度だけ読み込む。
+// 住所データを起動時に一度だけ読み込み、検証して、画面で使う「地域」の一覧を作る。
+// v0.6.0-alpha.2: 読み込み元（JSON・DB）を IAddressDataSource に分離した。
+// ここに残しているのは、データ元に関係なく必要な検証（件数・重複・整合性）だけ。
 // データを修正した場合はアプリを再起動すること。
 public sealed class AddressDataProvider
 {
     public const int ExpectedMunicipalityCount = 43;
     public const int ExpectedOsakaCityWardCount = 24;
 
-    // Web 既定（プロパティ名の大文字・小文字を区別しない）。ファイルごとに作らず使い回す。
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
     private readonly IReadOnlyDictionary<string, WardData> _wards;
     private readonly IReadOnlyDictionary<string, AreaInfo> _areaByKey;
 
-    // v0.5.5: IWebHostEnvironment 全体ではなく、必要なデータフォルダーの場所だけを受け取る。
-    // テストでは Options.Create(...) で任意のフォルダーを渡せる。
-    public AddressDataProvider(IOptions<AddressDataOptions> options)
+    public AddressDataProvider(IAddressDataSource source)
     {
-        var dataDirectory = options.Value.DataDirectory;
-        _wards = LoadOsakaCityWards(Path.Combine(dataDirectory, "Wards"));
-        Prefecture = LoadPrefecture(Path.Combine(dataDirectory, "Municipalities.json"));
-        Areas = BuildAreas(Prefecture, _wards);
+        _wards = ValidateOsakaCityWards(source.LoadOsakaCityWards(), source.SourceName);
+        Prefecture = ValidatePrefecture(source.LoadPrefecture(), source.SourceName);
+        Areas = BuildAreas(Prefecture, _wards, source.SourceName);
         _areaByKey = Areas.ToDictionary(a => a.Key, StringComparer.Ordinal);
     }
 
@@ -43,48 +37,46 @@ public sealed class AddressDataProvider
     public WardData? GetTownData(AreaInfo? area) =>
         area is { HasTownData: true, Ward: not null } && _wards.TryGetValue(area.Ward, out var data) ? data : null;
 
-    private static Dictionary<string, WardData> LoadOsakaCityWards(string directory)
+    private static Dictionary<string, WardData> ValidateOsakaCityWards(
+        IReadOnlyList<WardData> wards, string sourceName)
     {
         var loaded = new Dictionary<string, WardData>(StringComparer.Ordinal);
-        foreach (var path in Directory.GetFiles(directory, "*.json"))
+        foreach (var data in wards)
         {
-            var data = JsonSerializer.Deserialize<WardData>(File.ReadAllText(path), JsonOptions);
-            if (data is null || string.IsNullOrWhiteSpace(data.Ward) || data.Towns is null)
-                throw new InvalidDataException($"区データの形式が不正です: {path}");
+            if (string.IsNullOrWhiteSpace(data.Ward))
+                throw new InvalidDataException($"区名が空の区データがあります（データ元：{sourceName}）。");
             if (!loaded.TryAdd(data.Ward, data))
-                throw new InvalidDataException($"区名が重複しています: {data.Ward}");
+                throw new InvalidDataException($"区名が重複しています: {data.Ward}（データ元：{sourceName}）");
             if (data.Towns.GroupBy(t => t.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
-                throw new InvalidDataException($"町名が重複しています: {data.Ward}");
+                throw new InvalidDataException($"町名が重複しています: {data.Ward}（データ元：{sourceName}）");
         }
         if (loaded.Count != ExpectedOsakaCityWardCount)
             throw new InvalidDataException(
-                $"大阪市の区データは{ExpectedOsakaCityWardCount}ファイル必要です。現在 {loaded.Count} 件です。");
+                $"大阪市の区データは{ExpectedOsakaCityWardCount}区分必要です。現在 {loaded.Count} 件です（データ元：{sourceName}）。");
         return loaded;
     }
 
-    private static PrefectureData LoadPrefecture(string path)
+    private static PrefectureData ValidatePrefecture(PrefectureData data, string sourceName)
     {
-        if (!File.Exists(path))
-            throw new InvalidDataException($"市町村データが見つかりません: {path}");
-        var data = JsonSerializer.Deserialize<PrefectureData>(File.ReadAllText(path), JsonOptions);
-        if (data is null || data.Prefecture != "大阪府" || data.Municipalities is null)
-            throw new InvalidDataException($"市町村データの形式が不正です: {path}");
+        if (data.Prefecture != "大阪府")
+            throw new InvalidDataException($"市町村データの都道府県が「大阪府」ではありません（データ元：{sourceName}）。");
         if (data.Municipalities.Count != ExpectedMunicipalityCount)
             throw new InvalidDataException(
-                $"大阪府の市町村は{ExpectedMunicipalityCount}件必要です。現在 {data.Municipalities.Count} 件です。");
+                $"大阪府の市町村は{ExpectedMunicipalityCount}件必要です。現在 {data.Municipalities.Count} 件です（データ元：{sourceName}）。");
         if (data.Municipalities.GroupBy(m => m.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
-            throw new InvalidDataException("市町村名が重複しています。");
+            throw new InvalidDataException($"市町村名が重複しています（データ元：{sourceName}）。");
         foreach (var m in data.Municipalities)
         {
             if (string.IsNullOrWhiteSpace(m.Name) || m.Code.Length != 5 || !m.Code.All(char.IsAsciiDigit))
-                throw new InvalidDataException($"市町村の名前またはコードが不正です: {m.Name}");
+                throw new InvalidDataException($"市町村の名前またはコードが不正です: {m.Name}（データ元：{sourceName}）");
             if (m.Wards.GroupBy(w => w.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
-                throw new InvalidDataException($"区名が重複しています: {m.Name}");
+                throw new InvalidDataException($"区名が重複しています: {m.Name}（データ元：{sourceName}）");
         }
         return data;
     }
 
-    private static AreaInfo[] BuildAreas(PrefectureData prefecture, IReadOnlyDictionary<string, WardData> wards)
+    private static AreaInfo[] BuildAreas(
+        PrefectureData prefecture, IReadOnlyDictionary<string, WardData> wards, string sourceName)
     {
         var areas = new List<AreaInfo>();
         foreach (var m in prefecture.Municipalities)
@@ -100,12 +92,12 @@ public sealed class AddressDataProvider
                     w.Roman, m.Roman, group, m.HasTownData));
         }
 
-        // 大阪市の区一覧と Data/Wards/ のファイルが過不足なく一致することを確認する。
+        // 市町村データの大阪市の区と、区別町名データが過不足なく一致することを確認する。
         var osakaWards = areas.Where(a => a.HasTownData).Select(a => a.Ward!).ToHashSet(StringComparer.Ordinal);
         if (!osakaWards.SetEquals(wards.Keys))
-            throw new InvalidDataException("Municipalities.json の大阪市の区と Data/Wards/ のファイルが一致しません。");
+            throw new InvalidDataException($"市町村データの大阪市の区と区別町名データが一致しません（データ元：{sourceName}）。");
 
-        // 表示順：大阪市の区 → 堺市の区 → 市 → 町村（各グループ内は JSON の記載順）。
+        // 表示順：大阪市の区 → 堺市の区 → 市 → 町村（各グループ内はデータの記載順）。
         return areas
             .OrderBy(a => a.Municipality == "大阪市" ? 0 : a.Ward is not null ? 1 : a.Kind == "市" ? 2 : 3)
             .ToArray();
