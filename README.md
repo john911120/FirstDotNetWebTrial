@@ -2,12 +2,13 @@
 
 **Java エンジニアが、C# をまったく知らない状態から作った、はじめての ASP.NET Core Web アプリケーション**
 
+[![CI](https://github.com/john911120/FirstDotNetWebTrial/actions/workflows/ci.yml/badge.svg)](https://github.com/john911120/FirstDotNetWebTrial/actions/workflows/ci.yml)
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
 ![C# 14](https://img.shields.io/badge/C%23-14-239120)
 ![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET_Core-MVC-512BD4)
 ![EF Core 10](https://img.shields.io/badge/EF_Core-10-512BD4)
 ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![xUnit](https://img.shields.io/badge/xUnit-64_passed_%2F_3_skipped-1a7f37)
+![xUnit](https://img.shields.io/badge/xUnit-67_tests-1a7f37)
 
 長く Java（Spring Boot）で仕事をしてきましたが、C# と .NET に触れるのはこれが初めてです。Microsoft Learn を見ながら **LINQ の練習** として小さな住所検索を作り始め、気づけば大阪府全域の住所を扱い、自動テストと PostgreSQL まで備えたアプリになりました。
 
@@ -39,6 +40,7 @@
 | データベース | PostgreSQL 16（Docker Compose）、DbUp（マイグレーション）、EF Core 10 + Npgsql（読み込み） |
 | データ | JSON（大阪府の市町村一覧、大阪市24区・580町名・1,815丁目）。DB の初期データも同じ内容 |
 | テスト | xUnit、偽の `HttpMessageHandler`、環境変数で実行を切り替える独自属性 `[DatabaseFact]`、`[Collection]` による DB テストの直列実行 |
+| CI・依存関係の更新 | GitHub Actions（PostgreSQL 16 のサービスコンテナーで全テストを実行）、Dependabot（NuGet・GitHub Actions を週次で確認） |
 
 ## 歩み
 
@@ -147,11 +149,17 @@ dotnet test --filter "Category=Integration" --logger "console;verbosity=detailed
 Remove-Item Env:OSAKA_TEST_DB, Env:OSAKA_MIGRATION_TEST_DB
 ```
 
+### CI
+
+プルリクエストと `main` への push のたびに、GitHub Actions がビルドと全テストを実行します。CI では PostgreSQL 16 を起動して接続文字列を渡すため、ローカルではスキップされる DB のテストも含めて67件すべてを実行します。設定は [.github/workflows/ci.yml](.github/workflows/ci.yml) にあります。
+
 ## フォルダー構成
 
 ```text
 FirstDotNetWebTrial/
+├── .github/                   # GitHub Actions の CI と Dependabot の設定
 ├── OsakaAddress.slnx          # ソリューション
+├── global.json                # 使用する .NET SDK のバージョン
 ├── compose.yaml               # 開発用の PostgreSQL 16
 ├── .env                       # DB のパスワード（各自で作成・Git 管理外）
 ├── OsakaAddressMvc/           # Web アプリ本体（詳しい説明は OsakaAddressMvc/README.md）
