@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16 # compose.yaml と同じバージョン
+        env:
+          POSTGRES_USER: oamvc_user
+          POSTGRES_PASSWORD: ci_only_password # CI の使い捨て DB 専用（秘密情報ではない）
+          POSTGRES_DB: oamvc_test
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U oamvc_user -d oamvc_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # 接続文字列を渡すため、通常はスキップされる DB テストも含めて全件実行する
+      - name: Test
+        env:
+          OSAKA_TEST_DB: Host=localhost;Port=5434;Database=oamvc_test;Username=oamvc_user;Password=ci_only_password
+          OSAKA_MIGRATION_TEST_DB: Host=localhost;Port=5434;Database=oamvc_test;Username=oamvc_user;Password=ci_only_password
+        run: dotnet test --no-build --configuration Release --logger "console;verbosity=normal"
