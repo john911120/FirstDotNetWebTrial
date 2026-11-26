@@ -23,7 +23,8 @@
   </ItemGroup>
   <!-- v0.6.0: EF Core（PostgreSQL）で DB から住所データを読み込む -->
   <ItemGroup>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Npgsql" Version="10.0.4" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.4" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="db/migration/*.sql" />
